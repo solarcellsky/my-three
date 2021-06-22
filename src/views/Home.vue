@@ -1,8 +1,5 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
-  </div>
+  <HelloWorld />
 </template>
 
 <script lang="ts">
@@ -16,3 +13,9 @@ export default defineComponent({
   },
 });
 </script>
+
+<style lang="scss">
+.home {
+  height: 100%;
+}
+</style>
