@@ -66,7 +66,7 @@ export default {
       scene.add( hemisphereLight );
       scene.add( hemisphereLightHelper );
 
-      scene.background = new THREE.TextureLoader().load("assets/texture/sky/sky.jpg");
+      scene.background = new THREE.TextureLoader().load("assets/texture/galaxy.jpg");
 
 
       const pmremGenerator = new THREE.PMREMGenerator(renderer);
@@ -136,6 +136,7 @@ export default {
       }, this.onProgress, this.onError);
       
       this.animate();
+      window.addEventListener( 'resize', this.onWindowResize, false );
     },
     bindSceneEvent(scene) {
       let objectsHover = [];
@@ -229,6 +230,17 @@ export default {
       } else {
         return string;
       }
+    },
+    onWindowResize(){
+
+      let windowHalfX = window.innerWidth/2;
+      let windowHalfY = window.innerHeight/2;
+
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(window.innerWidth,window.innerHeight);
+
     }
   },
   mounted() {
