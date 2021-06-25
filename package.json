@@ -7,7 +7,14 @@
     "build": "vue-cli-service build"
   },
   "dependencies": {
+    "axios": "^0.21.1",
+    "cesium": "^1.82.1",
     "core-js": "^3.6.5",
+    "echarts": "^5.1.2",
+    "echarts-gl": "^2.0.5",
+    "geolib": "^3.3.1",
+    "mapbox-gl": "^2.3.1",
+    "shapefile": "^0.6.6",
     "three": "^0.129.0",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0"

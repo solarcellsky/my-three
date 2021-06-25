@@ -1,15 +1,15 @@
 <template>
-  <HelloWorld />
+  <ThreeDraw />
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import HelloWorld from '@/components/HelloWorld.vue'; // @ is an alias to /src
+import ThreeDraw from '@/components/ThreeDraw.vue'; // @ is an alias to /src
 
 export default defineComponent({
   name: 'Home',
   components: {
-    HelloWorld,
+    ThreeDraw,
   },
 });
 </script>
