@@ -241,7 +241,6 @@ export default {
       const lableDiv = document.createElement('div');
       lableDiv.setAttribute('style', 'background: rgba(0, 0, 0, .6);color:#efefef;padding: 5px;font-size:10px;margin-top: -1em;border-radius: 3px;padding: 3px 8px;');
       const sceneLabel = new CSS2DObject(lableDiv);
-
       scene.traverse((child) => {
         if (child.children.length === 0) {
           // Add only objects widthout children
@@ -255,12 +254,14 @@ export default {
           
           child.addEventListener('mouseover', (event) => {
             event.stopPropagation();
-            child.children = [];
-            if (!objectsHover.includes(event.target))
-              objectsHover.push(event.target);
+            // event.preventDefault();
+            if (!objectsHover.includes(child))
+              objectsHover.push(child);
             const overcolor = new THREE.Color(0xff0000);
+            const v3 = new THREE.Vector3(child.geometry.boundingBox.max.x, child.geometry.boundingBox.max.y, child.geometry.boundingBox.max.z);
+            console.log(v3)
 
-            scene.material.color.setRGB(overcolor.r, overcolor.g, overcolor.b)
+            scene.material.color.setRGB(overcolor.r, overcolor.g, overcolor.b);
             // console.log(scene.userData.properties.PMZ_NAME)
 
             document.body.style.cursor = 'pointer';
@@ -306,7 +307,9 @@ export default {
           });
 
           child.addEventListener('mousedown', (event) => {
-            event.stopPropagation();
+            console.log(666)
+
+            // event.stopPropagation();
 
             if (child.material && child.material.emissive) {
               child.material.emissive.setHex(new THREE.Color(0x0000ff));
@@ -366,7 +369,7 @@ export default {
         geometry.rotateZ(Math.PI)
 
         const geometryEdges = new THREE.EdgesGeometry(geometry, 1);
-        const edgesMtl =  new THREE.LineBasicMaterial({color: new THREE.Color(0x100000)});
+        const edgesMtl =  new THREE.LineBasicMaterial({color: new THREE.Color(0x409eff)});
         const geometryLine = new THREE.LineSegments(geometryEdges, edgesMtl);
 
         let mesh = new THREE.Mesh(geometry, height ? MAT_BUILDING_TEXTURE : MAT_BUILDING);
@@ -466,7 +469,8 @@ export default {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: #000;
+  background: #000 url(../assets/bg.jpeg) no-repeat 50% 50%;
+  background-size: cover;
 }
 #progress-bar {
   position: absolute;
@@ -483,9 +487,11 @@ export default {
   bottom:0;
   right:0;
   width: 360px;
-  background: rgba(0, 0, 0, .6);
+  height: 100%;
+  background: rgba(34, 34, 34, .75);
   color:#00f3f7;
   padding: 5px;
   font-size:10px;
+  border-left: 1px solid #5c5c5c;
 }
 </style>
