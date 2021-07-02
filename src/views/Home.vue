@@ -5,6 +5,7 @@
       <li><a href="/about">Cool</a></li>
       <li><a href="/wire">Wire Frame</a></li>
       <li><a href="/threemap">Three Map</a></li>
+      <li><a href="/cool">Cool</a></li>
     </ul>
   </div>
 </template>

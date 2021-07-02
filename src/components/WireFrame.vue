@@ -29,7 +29,7 @@ export default {
     this.initScene();
     this.initCameras();
     this.initRenderer();
-    // this.initHelpers();
+    this.initHelpers();
     this.initControls();
     this.animate();
   },
@@ -86,8 +86,10 @@ export default {
     initHelpers() {
       const directionalLight = new THREE.DirectionalLight(0xdfebff);
       const directionalLightHelper = new THREE.DirectionalLightHelper( directionalLight, 5 );
-      const hemisphereLight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+      const hemisphereLight = new THREE.HemisphereLight( 0xffff00, 0x080820, 1 );
       const hemisphereLightHelper = new THREE.HemisphereLightHelper( hemisphereLight, 5 );
+      const spotLight = new THREE.SpotLight( 0xff0000);
+      const spotLightHelper = new THREE.SpotLightHelper( spotLight, 5 );
       const axesHelper = new THREE.AxesHelper(5);
 
       worldScene.background = new THREE.TextureLoader().load("assets/texture/galaxy.jpg");
@@ -107,16 +109,14 @@ export default {
 
       const helperGroup = new THREE.Group();
       const lightGroup = new THREE.Group();
-      helperGroup.add(axesHelper, directionalLightHelper, hemisphereLightHelper, gridHelper);
-      lightGroup.add(directionalLight, hemisphereLight);
+      helperGroup.add(axesHelper, directionalLightHelper, hemisphereLightHelper, gridHelper, spotLightHelper);
+      lightGroup.add(directionalLight, hemisphereLight, spotLight);
 
       worldScene.add(helperGroup);
       worldScene.add(lightGroup);
     },
-    initLights() {},
     initControls() {
       const orbitControls = new OrbitControls( window.camera, window.renderer.domElement );
-      const orbitControlsLabel = new OrbitControls( window.camera, window.labelRenderer.domElement );
       orbitControls.enableDamping = true;
       orbitControls.dampingFactor = 0.05;
       orbitControls.screenSpacePanning = true;
@@ -243,8 +243,7 @@ export default {
           event.stopPropagation();
           if (!objectsHover.includes(floor))
               objectsHover.push(floor);
-          // const overcolor = new THREE.Color(0xff0000);
-          // child.children[1].material[0].color.setRGB(overcolor.r, overcolor.g, overcolor.b);
+
           const floorovercolor = new THREE.Color(0x0000ff);
           worldScene.children.map((g) => {
             if (g.children[0] instanceof THREE.Mesh && g.children[0].uuid === floor.uuid) {
@@ -258,13 +257,9 @@ export default {
 
         child.addEventListener('mouseout', (event) => {
           objectsHover = objectsHover.filter((n) => n !== event.target);
-          // const outcolor = new THREE.Color(0xffffff);
-          // child.children[1].material[0].color.setRGB(outcolor.r, outcolor.g, outcolor.b)
-
           const flooroutcolor = new THREE.Color(0x409eff);
           worldScene.children.map((g) => {
             if (g.children[0] instanceof THREE.Mesh && g.children[0].uuid === floor.uuid) {
-              console.log(g.children[0].material, g.children[0].uuid)
               g.children[0].material.color.setRGB(flooroutcolor.r, flooroutcolor.g, flooroutcolor.b);
               g.children[0].material.opacity = .1;
             }
@@ -328,8 +323,6 @@ export default {
             const outcolor = new THREE.Color(0x409eff);
             scene.material.color.setRGB(outcolor.r, outcolor.g, outcolor.b)
             scene.material.opacity = .1;
-
-            // child.position.z = 0;
 
             document.body.style.cursor = 'default';
           });
