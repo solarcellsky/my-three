@@ -4,10 +4,13 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build"
+    "build": "vue-cli-service build",
+    "test": "mocha --reporter list"
   },
   "dependencies": {
     "axios": "^0.21.1",
+    "babylonjs": "^4.2.0",
+    "babylonjs-loaders": "^4.2.0",
     "cesium": "^1.82.1",
     "core-js": "^3.6.5",
     "echarts": "^5.1.2",
@@ -25,6 +28,7 @@
     "@vue/cli-plugin-typescript": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
     "@vue/compiler-sfc": "^3.0.0",
+    "mocha": "^9.0.2",
     "node-sass": "^4.12.0",
     "sass-loader": "^8.0.2",
     "typescript": "~4.1.5"

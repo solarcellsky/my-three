@@ -1,7 +1,7 @@
 <template>
-  <div class="control-wrap">
+  <div class="control-wrap" ref="control">
     <div class="control">
-      <div class="slider" @mousedown="onMousedown" @mouseout="onMouseOut">
+      <div class="slider" @mousedown="changeSlider">
         <div class="guide" ref="guide"></div>
         <div class="bar" ref="bar"></div>
       </div>
@@ -12,83 +12,52 @@
 export default {
   name: 'Slider',
   data () {
-    return {
-      $ruler: '', // 滑竿
-      $bar: '', // 左侧滑块
-      $endbar: '', // 右侧滑块
-      startX: '', // 左侧滑块位置
-      endX: '', // 右侧滑块位置
-      step: '', // 滑竿在限定范围内可以分多少步
-      intervalStart: 0, 
-      intervalEnd: 24,
-      startStep: 0,
-      endStep: 24,
-      amountW: '' //  滑竿多长距离
-    }
+    return {}
   },
-  created() {
-    const vm = this;
-    vm.$nextTick(() => {
-      vm.initSlider();
-    })
-  },
+  created() {},
   methods: {
-    initSlider(){
+    changeSlider(e) {
       const vm = this;
+      vm.$control = vm.$refs.control;
       vm.$guide = vm.$refs.guide;
       vm.$bar = vm.$refs.bar;
-      // 滑竿多长距离
-      vm.amountW = vm.$guide.clientWidth - vm.$bar.clientWidth; 
-      // 总共多少步
-      vm.step = vm.amountW / (vm.intervalEnd - vm.intervalStart);
-    },
-    onMousedown(e) {
-      const vm = this;
-      window.addEventListener( 'mousemove', this.onMouseMove );
-      vm.onMouseMove( e );
-      event.stopPropagation();
-      return false;
-    },
-    onMouseMove(e) {
-      const vm = this;
       const sliderWidth = vm.$guide.offsetWidth;
-      const mouseX = e.pageX - vm.$bar.offsetLeft;  // local mouse x
-      let percent = mouseX / e.pageX;
-      var eleX = box.offsetLeft;
-      // percent = (percent > 1) ? 1 : (percent < 0) ? 0 : percent;
-      // console.log(e.originalEvent)
-      vm.$bar.style.width = percent * 100 + '%';
-      console.log(e)
-      this.onChangeCallback( percent );
+      const startX = e.clientX;
 
-      // // 滑动距离=当前滑块x距离-最开始滑块距离
-      // let slidedis = e.touches[0].pageX - vm.$ruler.offsetLeft; 
+      document.onmousemove = function(e) {
+        e.preventDefault();
+        const mouseX = e.clientX - vm.$control.offsetLeft - 30;
 
-      // // 滑动距离小于0 或者大于滑竿的宽度，return掉
-      // if (slidedis < 0 || slidedis > vm.amountW) {
-      //   return;
-      // }
-      // let ste = Math.round(slidedis / vm.step);
-      // if ((ste + vm.intervalStart) >= vm.endStep) {
-      //   return;
-      // }
-      // vm.startStep = ste + vm.intervalStart;
-      // vm.$bar.style.left = (ste * vm.step) + 'px'
+        let percent = mouseX / sliderWidth;
+        percent = (percent > 1) ? 1 : (percent < 0) ? 0 : percent;
+        vm.$bar.style.width = percent * 100 + '%';
+        vm.onChangeCallback( percent );
+      }
+      document.onmousedown = function(e) {
+        e.preventDefault();
+        const mouseX = e.clientX - vm.$control.offsetLeft - 30;
+
+        let percent = mouseX / sliderWidth;
+        percent = (percent > 1) ? 1 : (percent < 0) ? 0 : percent;
+
+        vm.$bar.style.width = percent * 100 + '%';
+        vm.onChangeCallback( percent );
+      }
+      document.onmouseup = function() {
+        document.onmousemove = null;
+      }
     },
     onChangeCallback(val) {
-      // console.log(val)
+      this.$emit('onChange', val)
     },
-    onMouseOut() {
-      window.removeEventListener( 'mousemove', this.onMouseMove )
-    }
   }
 };
 </script>
 <style lang="scss" scoped>
 .control-wrap {
   position: absolute;
-  top: 87px;
-  right: 30px;
+  top: 20px;
+  right: 220px;
   overflow: hidden;
   z-index: 10000; 
 
@@ -159,6 +128,7 @@ export default {
         position: relative;
         top: 0px;
         left: 0px;
+        width: 30%;
         height: 100%;
         background-color: #ccc;
         transition: all .3s; }
