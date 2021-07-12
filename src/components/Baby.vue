@@ -51,12 +51,16 @@ export default {
     },
     createScene() {
         const scene = new BABYLON.Scene(engine);
-        scene.clearColor = new BABYLON.Color4(.792, .926, .923, 1)
+        scene.clearColor = new BABYLON.Color4(.792, .926, .923, 1);
 
         const camera = new BABYLON.ArcRotateCamera("camera", 0, Math.PI / 4, 350, new BABYLON.Vector3(0, 0, 0), scene);
+
+         // This attaches the camera to the canvas
+        camera.attachControl(canvas, true);
+
         camera.easing = new BABYLON.CubicEase;
         camera.duration = 60;
-        camera.minZ = 2;
+        camera.minZ = 4;
         camera.maxZ = 3e3;
         camera.panningAxis = new BABYLON.Vector3(1, 0, 1);
         camera.panningSensibility = 40;
@@ -70,14 +74,20 @@ export default {
         camera.upperBetaLimit = Math.PI - .5;
         camera.checkCollisions = !0;
         camera.collisionRadius = new BABYLON.Vector3(3, 3, 3);
-        camera.easing.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT)
+        camera.easing.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
+        camera.useAutoRotationBehavior = true;
+        camera.autoRotationBehavior.idleRotationSpeed = 1; //自动旋转速度
+        camera.autoRotationBehavior.idleRotationWaitTime = 1000; //用户交互后多少时间开启自动旋转（毫秒）
+        camera.autoRotationBehavior.idleRotationSpinupTime = 1000; //从开始自动旋转到设置的旋转速度所需要的时间（毫秒）
+        camera.autoRotationBehavior.zoomStopsAnimation = true; //设置缩放是否会停止自动旋转
 
-        // This attaches the camera to the canvas
-        camera.attachControl(canvas, true);
+        const _t = BABYLON.CubeTexture.CreateFromPrefilteredData("assets/campusalbano/environment.env", scene);
+        // scene.environmentBRDFTexture = _t;
+        console.log(_t, scene)
 
-        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0));
+        // const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0));
 
-        const ground = BABYLON.Mesh.CreateGround("Ground", 3e3, 3e3, 16, scene);
+        // const ground = BABYLON.Mesh.CreateGround("Ground", 3e3, 3e3, 16, scene);
 
         // const box = BABYLON.MeshBuilder.CreateBox("box", {});
 

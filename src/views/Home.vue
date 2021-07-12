@@ -6,6 +6,7 @@
       <li><a href="/wire">Wire Frame</a></li>
       <li><a href="/threemap">Three Map</a></li>
       <li><a href="/cool">Cool</a></li>
+      <li><a href="/water">Water</a></li>
     </ul>
   </div>
 </template>

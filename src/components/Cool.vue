@@ -41,7 +41,7 @@ export default {
   data() {
     return {
       models: [
-        { name: 'assets/campusalbano/environment.glb', position: { x: 0, y: 0, z: 0 } },
+        // { name: 'assets/campusalbano/environment.glb', position: { x: 0, y: 0, z: 0 } },
         { name: 'assets/campusalbano/buildings.glb', position: { x: 0, y: 0, z: 0 } }
       ]
     }
@@ -444,6 +444,7 @@ export default {
       //   worldScene.add(object)
       //   onLoaded();
       // }, this.onProgress, this.onError);
+      const loadStartTime = performance.now();
       const loader = new GLTFLoader();
       const dracoLoader = new DRACOLoader();
       const MAT_BUILDING_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0x409eff), opacity: .3, transparent: true});
@@ -457,41 +458,22 @@ export default {
       loader.setDRACOLoader(dracoLoader);
       loader.manager = window.loadingManager;
       loader.load( model.name, function (gltf) {
+        console.info( 'Load time: ' + ( performance.now() - loadStartTime ).toFixed( 2 ) + ' ms.' );
         let scene = gltf.scene;
         // scene.scale.set(0.01, 0.01, 0.01);
-        // https://campusalbano.se/view/3fAXYZR2SQGOGCqaekoCio/open
-        // "images":[
-        // {"mimeType":"image/jpeg","name":"A2_400_V_0300000_ao_BaseColor.jpg","bufferView":27},
-
-        // {"mimeType":"image/jpeg","name":"A1_40_V_170002_ao_BaseColor.jpg","bufferView":28},
-        // {"mimeType":"image/jpeg","name":"A2_40_V_010000_ao_BaseColor.jpg","bufferView":29},
-        // {"mimeType":"image/jpeg","name":"A3_40_V_140000_ao_BaseColor.jpg","bufferView":30},
-        // {"mimeType":"image/jpeg","name":"A3_40_V_150000_ao_BaseColor.jpg","bufferView":31},
-        // {"mimeType":"image/jpeg","name":"A3_40_V_130000_ao_BaseColor.jpg","bufferView":32},
-        // {"mimeType":"image/jpeg","name":"A2_40_V_090000_ao_BaseColor.jpg","bufferView":33},
-        // {"mimeType":"image/jpeg","name":"A1_40_V_160000_ao_BaseColor.jpg","bufferView":34},
-        // {"mimeType":"image/jpeg","name":"A2_400_V_1000000_ao_BaseColor.jpg","bufferView":35},
-        // {"mimeType":"image/jpeg","name":"A1_40V_12000_ao_BaseColor.jpg","bufferView":36},
-        // {"mimeType":"image/jpeg","name":"A2_400_V_0100000_ao_BaseColor.jpg","bufferView":37},
-        // {"mimeType":"image/jpeg","name":"L1_300_V_020000_ao_BaseColor.jpg","bufferView":38},
-        // {"mimeType":"image/jpeg","name":"L1_300_V_040000_ao_BaseColor.jpg","bufferView":39}]
-
-
-
-        // https://campusalbano.se/assets/gltf/A2_400_V_0300000_ao_BaseColor.jpg
         worldScene.add(scene)
-        scene.traverse((node) => {
-          node.traverse((n) => {
-            window.interactionManager.add(n);
+        // scene.traverse((node) => {
+        //   node.traverse((n) => {
+        //     window.interactionManager.add(n);
         
-            n.addEventListener('mousedown', (event) => {
-              console.log(n)
-              event.stopPropagation();
-              console.log(n.name)
-              document.body.style.cursor = 'pointer';
-            });
-          })
-        });
+        //     n.addEventListener('mousedown', (event) => {
+        //       console.log(n)
+        //       event.stopPropagation();
+        //       console.log(n.name)
+        //       document.body.style.cursor = 'pointer';
+        //     });
+        //   })
+        // });
 
         // scene.traverse((node) => {
         //   if (!node.isMesh) return;
