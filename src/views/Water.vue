@@ -23,10 +23,12 @@
 
 <script>
 import * as THREE from "three";
+import * as TWEEN from "tween.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
-import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
+import { CSS3DRenderer, CSS3DSprite } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
+import { Interaction } from '../components/three.interaction/src/index.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import Compass from "../components/common/scene/Compass";
 import ArrowFlow from "../components/common/scene/ArrowFlow";
@@ -35,7 +37,7 @@ import PumpLineCharts from "../components/common/echarts/PumpLineCharts";
 import PumpTensionLineCharts from "../components/common/echarts/PumpTensionLineCharts";
 import LowTensionLineCharts from "../components/common/echarts/LowTensionLineCharts";
 import HighTensionLineCharts from "../components/common/echarts/HighTensionLineCharts";
-import Hamburg from '../components/common/ui/Hamburg'
+import Hamburg from '../components/common/ui/Hamburg';
 
 
 export default {
@@ -142,7 +144,19 @@ export default {
             progressBar.style.zIndex = -1;
           }, 500);
         };
-      }
+      };
+
+      const interaction = new Interaction(renderer, worldScene, camera);
+
+      const cube = new THREE.Mesh(
+        new THREE.BoxGeometry(80, 80, 80),
+        new THREE.MeshBasicMaterial({ color: 0xffffff }),
+      );
+      worldScene.add(cube);
+      cube.cursor = 'pointer';
+      cube.on('click', function(ev) {
+        this.makeLog(ev)
+      });
 
       // expose global objects
       window.camera = camera;
@@ -236,7 +250,7 @@ export default {
       let bumps = [];
       const group = new THREE.Group();
 
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 30; i++) {
         bumps.push({
           id: i,
           name: '加压泵#' + (i + 1),
@@ -247,7 +261,7 @@ export default {
         })
       }
 
-      const MAT_OVER = new THREE.MeshPhongMaterial({color: new THREE.Color(0xff0000), opacity: .3, transparent: true});
+      const MAT_OVER = new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .3, transparent: true});
       const MAT_OUT = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: .3, transparent: true});
       // const BUILDINGS_TEXTURE = new THREE.TextureLoader().load("assets/campusalbano/A2_40_V_010000_ao_BaseColor.jpg");
       // const MAT = new THREE.MeshBasicMaterial({
@@ -258,15 +272,21 @@ export default {
       // });
 
       bumps.map((o) => {
-        const element = document.createElement( 'div' );
-        element.className = o.power > 5.5 ? 'element danger' : 'element';
-        element.addEventListener( 'click', (event) => {
+        const $label = document.createElement( 'div' );
+        $label.className = o.power > 5.5 ? 'label danger' : 'label';
+
+        $label.addEventListener( 'click', (event) => {
           event.stopPropagation();
-          const html = element.innerHTML;
+          const html = $label.innerHTML;
+          const siblings = $label.parentNode.children;
+          for (let i = 0; i < siblings.length; i++) {
+            siblings[i].className = siblings[i].className.replace(' selected', '');
+          }
+          $label.className = $label.className + ' selected';
           self.objectClickHandler(event, html);
         }, false );
 
-        element.addEventListener( 'mouseover', (event) => {
+        $label.addEventListener( 'mouseover', (event) => {
           event.stopPropagation();
           worldScene.traverse((child) => {
             if ( !child.isMesh ) return;
@@ -274,7 +294,7 @@ export default {
           });
         }, false );
 
-        element.addEventListener( 'mouseleave', (event) => {
+        $label.addEventListener( 'mouseleave', (event) => {
           event.stopPropagation();
           worldScene.traverse((child) => {
             if ( !child.isMesh ) return;
@@ -285,39 +305,51 @@ export default {
         const name = document.createElement( 'div' );
         name.textContent = o.name;
         name.className = 'name';
-        element.appendChild(name);
+        $label.appendChild(name);
 
         const power = document.createElement( 'div' );
         power.innerHTML = self.htmlWrpper('功率', o.power, 'Kw');
         power.className = 'item';
-        element.appendChild(power);
+        $label.appendChild(power);
 
         const voltage = document.createElement( 'div' );
         voltage.innerHTML = self.htmlWrpper('电压', o.voltage, 'v');
         voltage.className = 'item';
-        element.appendChild(voltage);
+        $label.appendChild(voltage);
 
         const electric_current = document.createElement( 'div' );
         electric_current.innerHTML = self.htmlWrpper('电流', o.electric_current, 'A');
         electric_current.className = 'item';
-        element.appendChild(electric_current);
+        $label.appendChild(electric_current);
 
         const pressure = document.createElement( 'div' );
         pressure.innerHTML = self.htmlWrpper('压力', o.pressure, 'MPa');
         pressure.className = 'item';
-        element.appendChild(pressure);
+        $label.appendChild(pressure);
 
-        const objectCSS = new CSS3DObject( element );
+        const objectCSS = new CSS3DSprite( $label );
         objectCSS.doubleSided = true;
         objectCSS.position.x = Math.random() * 100 - Math.random() * 100;
-        objectCSS.position.y = 0;
+        objectCSS.position.y = 5;
         objectCSS.position.z = Math.random() * 100 - Math.random() * 100;
         objectCSS.scale.set(0.05, 0.05, 0.05);
-
         group.add(objectCSS);
-      })
+      });
 
       sceneCSS.add( group );
+    },
+    screenPointToThreeCoords(x, y, domContainer, camera, targetZ) {
+      let vec = new THREE.Vector3(); // create once and reuse
+      let pos = new THREE.Vector3(); // create once and reuse
+      vec.set(
+          ( x / domContainer.innerWidth ) * 2 - 1,
+          - ( y / domContainer.innerHeight ) * 2 + 1,
+          0.5 );
+      vec.unproject( camera );
+      vec.sub( camera.position ).normalize();
+      let distance = (targetZ - camera.position.z) / vec.z;
+      pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
+      return pos;
     },
     htmlWrpper(label, val, unit) {
       return '<div>' + label +  ': </div><div class="v">' + val + unit + '</div>';
@@ -348,7 +380,53 @@ export default {
       this.infoExpand = !this.infoExpand;
     },
     objectClickHandler(e, html) {
+      orbitControls.update();
+      const oldPosition = camera.position;
+      const oldTarget = orbitControls.target;
+      const newPosition = this.screenPointToThreeCoords(e.clientX, e.clientY, window, camera, 0);
+      camera.lookAt(newPosition.x, newPosition.y, newPosition.z);
+      this.animateCamera(oldPosition, oldTarget, newPosition, newPosition)
       this.makeInfoPanel(html)
+    },
+    // oldP  相机原来的位置
+    // oldT  target原来的位置
+    // newP  相机新的位置
+    // newT  target新的位置
+    // callBack  动画结束时的回调函数
+    animateCamera(oldP, oldT, newP, newT, callBack) {
+      const object = {
+        x1: oldP.x, // 相机x
+        y1: oldP.y, // 相机y
+        z1: oldP.z, // 相机z
+        x2: oldT.x, // 控制点的中心点x
+        y2: oldT.y, // 控制点的中心点y
+        z2: oldT.z  // 控制点的中心点z
+      };
+      orbitControls.enabled = false;
+      const tween = new TWEEN.Tween(object);
+      tween.to({
+        x1: newP.x,
+        y1: newP.y,
+        z1: newP.z,
+        x2: newT.x,
+        y2: newT.y,
+        z2: newT.z
+      },1000);
+      tween.onUpdate(() => {
+        // camera.position.x = object.x1;
+        // camera.position.y = object.y1;
+        // camera.position.z = object.z1;
+        orbitControls.target.x = object.x2;
+        orbitControls.target.y = object.y2;
+        orbitControls.target.z = object.z2;
+        orbitControls.update();
+      })
+      tween.onComplete(() => {
+        orbitControls.enabled = true;
+        callBack&&callBack()
+      })
+      tween.easing(TWEEN.Easing.Cubic.InOut);
+      tween.start();
     },
     loadModels(models) {
       let self = this;
@@ -375,8 +453,8 @@ export default {
       loader.load( model.name, function (gltf) {
         console.info( 'Load time: ' + ( performance.now() - loadStartTime ).toFixed( 2 ) + ' ms.' );
         let scene = gltf.scene;
-        scene.scale.set(0.005, 0.005, 0.005);
-        scene.position.set(-30, 5, -30);
+        scene.scale.set(0.01, 0.01, 0.01);
+        scene.position.set(0, 0, 0);
         scene.traverse((child) => {
           if ( ! child.isMesh ) return;
           child.material = MAT_BUILDING_TEXTURE;
@@ -401,6 +479,7 @@ export default {
       camera.updateProjectionMatrix();
       renderer.render(worldScene, camera);
       rendererCSS.render(sceneCSS, camera);
+      TWEEN.update();
       stats.update();
     },
     onWindowResize(){
@@ -411,6 +490,9 @@ export default {
     },
     toggleInfoPanels(v) {
       this.panelExpand = v;
+    },
+    makeLog(info) {
+      console.log('%c INFO => %c' + info, 'color: #fff; background: #41b882; padding: 3px 4px;', 'color: #41b882; background: #fff;');
     }
   }
 };
@@ -437,64 +519,6 @@ export default {
     position: absolute;
     width: 100%;
     height: 100%;
-  }
-
-  .labels {
-    position: absolute;
-    left: 0;
-    top: 0;
-    opacity: 0;
-    transition: opacity .5s ease-out;
-    z-index: 9;
-
-    .label {
-      position: absolute;
-      opacity: 0.8;
-      transform: scale(1, 1);
-      left: 300px;
-      top: 300px;
-      cursor: pointer;
-      transition: all .3s ease-out;
-
-      &:hover,
-      &.selected {
-        .tag {
-          background-color: #e00606;
-        }
-        .line {
-          border-color: red;
-        }
-      }
-      &:hover {
-        transform: scale(1.1, 1.1);
-      }
-      .line {
-        position: absolute;
-        height: 30px;
-        width: 30px;
-        bottom: 0;
-        left: 15px;
-        border-left: 2px solid #999999;
-        -moz-transform: skew(-40deg);
-        -webkit-transform: skew(-40deg);
-        transform: skew(-40deg);
-      }
-
-      .tag {
-        position: absolute;
-        bottom: 30px;
-        left: 28px;
-        font-size: 12px;
-        background-color: #999999;
-        color: #fff;
-        padding: 2px 8px;
-        text-transform: uppercase;
-        white-space: nowrap;
-        cursor: pointer;
-        transition: background-color .2s ease-out;
-        border-radius: 3px 3px 3px 0;
-      }
-    }
   }
 
   .progress-bar {
@@ -577,7 +601,7 @@ export default {
 }
 .echarts {
   width: 430px;
-  height: 100%;
+  max-height: 100%;
   padding: 10px;
   transform: translate(-380px, 0);
   overflow: auto;
@@ -593,7 +617,7 @@ export default {
   }
 }
 
-.element {
+.label {
   width: 120px;
   background: rgba(0, 0, 0, .618);
   border: 1px solid rgba(0, 0, 0, .25);
@@ -609,15 +633,19 @@ export default {
     display: block;
     content: '';
     position: absolute;
-    left: -1px;
-    bottom: -19px;
-    height: 20px;
+    left: -12px;
+    bottom: -37px;
+    height: 40px;
     border-left: 1px solid rgba(0, 0, 0, .85);
-    transform: rotate(45deg);
+    transform: rotate(35deg);
   }
 
   &.danger {
     background: rgba(245, 108, 108, 0.87);
+  }
+
+  &.selected {
+    background: rgba(46, 164, 79, 0.87);
   }
 
   &:hover {

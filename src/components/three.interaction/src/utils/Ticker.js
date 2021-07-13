@@ -1,10 +1,10 @@
 import './Raf';
-import { EventDispatcher } from 'three';
+import * as THREE from 'three';
 
 /**
  * @extends EventDispatcher
  */
-class Ticker extends EventDispatcher {
+class Ticker extends THREE.EventDispatcher {
   /**
    *
    */

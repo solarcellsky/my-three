@@ -1,4 +1,4 @@
-import { Vector2 } from 'three';
+import * as THREE from 'three';
 
 /**
  * Holds all information related to an Interaction event
@@ -15,7 +15,7 @@ class InteractionData {
      *
      * @member {Vector2}
      */
-    this.global = new Vector2();
+    this.global = new THREE.Vector2();
 
     /**
      * The target DisplayObject that was interacted with

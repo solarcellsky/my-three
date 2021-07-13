@@ -1,4 +1,4 @@
-import { EventDispatcher, Object3D } from 'three';
+import * as THREE from 'three';
 import { Utils } from '../utils/Utils.js';
 
 /**
@@ -8,9 +8,9 @@ import { Utils } from '../utils/Utils.js';
  * @param {Function} fn callback
  * @return {this} this
  */
-EventDispatcher.prototype.on = function(type, fn) {
+THREE.EventDispatcher.prototype.on = function(type, fn) {
   if (!Utils.isFunction(fn)) return;
-  if (this instanceof Object3D) this.interactive = true;
+  if (this instanceof THREE.Object3D) this.interactive = true;
   this.addEventListener(type, fn);
   return this;
 };
@@ -22,7 +22,7 @@ EventDispatcher.prototype.on = function(type, fn) {
  * @param {Function} fn callback, which you had bind before
  * @return {this} this
  */
-EventDispatcher.prototype.off = function(type, fn) {
+THREE.EventDispatcher.prototype.off = function(type, fn) {
   this.removeEventListener(type, fn);
   return this;
 };
@@ -34,7 +34,7 @@ EventDispatcher.prototype.off = function(type, fn) {
  * @param {Function} fn callback
  * @return {this} this
  */
-EventDispatcher.prototype.once = function(type, fn) {
+THREE.EventDispatcher.prototype.once = function(type, fn) {
   if (!Utils.isFunction(fn)) return;
   const cb = (ev) => {
     fn(ev);
@@ -50,7 +50,7 @@ EventDispatcher.prototype.once = function(type, fn) {
  * @param {String} type event type, evnet name
  * @return {this} this
  */
-EventDispatcher.prototype.emit = function(type, ...argument) {
+THREE.EventDispatcher.prototype.emit = function(type, ...argument) {
   if (this._listeners === undefined || Utils.isUndefined(this._listeners[type])) return;
   const cbs = this._listeners[type] || [];
   const cache = cbs.slice(0);

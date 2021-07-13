@@ -1,7 +1,7 @@
 import '../patch/EventDispatcher';
 import '../patch/Object3D';
 
-import { EventDispatcher, Raycaster } from 'three';
+import * as THREE from 'three';
 import InteractionData from './InteractionData';
 import InteractionEvent from './InteractionEvent';
 import InteractionTrackingData from './InteractionTrackingData';
@@ -27,7 +27,7 @@ const hitTestEvent = {
  * @class
  * @extends EventDispatcher
  */
-class InteractionLayer extends EventDispatcher {
+class InteractionLayer extends THREE.EventDispatcher {
   /**
    * @param {WebGLRenderer} renderer - A reference to the current renderer
    * @param {Object} [options] - The options for the manager.
@@ -261,7 +261,7 @@ class InteractionLayer extends EventDispatcher {
      * @private
      * @member {Raycaster}
      */
-    this.raycaster = new Raycaster();
+    this.raycaster = new THREE.Raycaster();
 
     /**
      * snippet time
