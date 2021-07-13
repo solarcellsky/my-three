@@ -150,7 +150,7 @@ export default {
 
       const cube = new THREE.Mesh(
         new THREE.BoxGeometry(80, 80, 80),
-        new THREE.MeshBasicMaterial({ color: 0xffffff }),
+        new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .3, transparent: true}),
       );
       worldScene.add(cube);
       cube.cursor = 'pointer';
