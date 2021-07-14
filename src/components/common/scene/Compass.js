@@ -5,13 +5,11 @@ export default class Compass {
     this.options = options;
   }
   create() {
-    let self = this;
-
     const dom = document.getElementById(this.options.container);
     const ele = document.createElement('img');
     ele.setAttribute('class', 'compass');
     ele.setAttribute('id', 'compass');
-    ele.setAttribute('src', 'assets/compass.svg');
+    ele.setAttribute('src', 'assets/ui/compass.svg');
 
     dom.appendChild(ele);
 

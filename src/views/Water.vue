@@ -27,6 +27,7 @@ import * as THREE from "three";
 import * as TWEEN from "tween.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { CSS3DRenderer, CSS3DSprite } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 import { Interaction } from '../components/three.interaction/src/index.js';
@@ -40,19 +41,21 @@ import LowTensionLineCharts from "../components/common/echarts/LowTensionLineCha
 import HighTensionLineCharts from "../components/common/echarts/HighTensionLineCharts";
 import Hamburg from '../components/common/ui/Hamburg';
 import Clock from '../components/common/widgets/Clock';
+import CamPlayer from '../components/common/scene/CamPlayer';
 
 
 export default {
   components: {
     Hamburg,
-    Clock
+    Clock,
+    CamPlayer,
   },
   data() {
     return {
       panelExpand: true,
       infoExpand: false,
       models: [
-        { name: 'assets/water.gltf', position: { x: 0, y: 0, z: 0 } }
+        { name: 'assets/temp/dsf.fbx', position: { x: 0, y: 0, z: 0 } }
       ],
     }
   },
@@ -425,26 +428,38 @@ export default {
         self.loadGltfModel(model, () => {
           ++ numLoadedModels;
           if ( numLoadedModels === models.length ) {
-            console.log( "All models loaded" );
+            self.makeLog('All models loaded');
           }
         })
       })
     },
     loadGltfModel(model, onLoaded) {
-      const self = this;
-      const loadStartTime = performance.now();
-      const loader = new GLTFLoader();
-      const dracoLoader = new DRACOLoader();
-      const MAT_BUILDING_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: .3, transparent: true});
+      let loader;
       let uuids = [];
+      const self = this;
+      const dracoLoader = new DRACOLoader();
       dracoLoader.setDecoderPath( 'assets/draco/' );
       dracoLoader.setDecoderConfig({ type: 'js' });
       dracoLoader.preload();
-      loader.setDRACOLoader(dracoLoader);
+      const MAT_BUILDING_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: .3, transparent: true});
+      const loadStartTime = performance.now();
+      const isFbx = model.name.indexOf('.fbx') > 0;
+      if (isFbx) { 
+        loader = new FBXLoader();
+      } else {
+        loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+      };
       loader.manager = loadingManager;
-      loader.load( model.name, function (gltf) {
-        console.info( 'Load time: ' + ( performance.now() - loadStartTime ).toFixed( 2 ) + ' ms.' );
-        let scene = gltf.scene;
+      loader.load( model.name, function (object) {
+        console.log(object)
+        self.makeLog('Load time: ' + ( performance.now() - loadStartTime ).toFixed( 2 ) + ' ms.');
+        let scene;
+        if (isFbx) { 
+          scene = object;
+        } else {
+          scene = object.scene;
+        };
         scene.scale.set(0.01, 0.01, 0.01);
         scene.position.set(0, 0, 0);
         scene.traverse((child) => {
@@ -496,7 +511,7 @@ export default {
       this.panelExpand = v;
     },
     makeLog(info) {
-      console.log('%c INFO => %c' + info, 'color: #fff; background: #41b882; padding: 3px 4px;', 'color: #41b882; background: #fff;');
+      console.log('%c INFO => %c' + ' ' + info, 'color: #fff; background: #41b882; padding: 3px 4px;', 'color: #41b882; background: #fff;');
     }
   }
 };
@@ -513,8 +528,8 @@ export default {
     position: absolute;
     top: 10px;
     right: 30px;
-    width: 120px;
-    height: 120px;
+    width: 80px;
+    height: 80px;
     opacity: .65;
     z-index: 9;
   }
@@ -539,7 +554,7 @@ export default {
     background-color: rgba(80, 80, 80, 1);
 
     #loadedPercent {
-      color:#00f3f7;
+      color:#41b882;
       padding: 5px;
       font-size:10px;
     }

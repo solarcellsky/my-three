@@ -1,6 +1,6 @@
 <template>
   <div :class="expand ? 'hamburg expand' : 'hamburg'" @click="toggleInfoPanels">
-    <img :src="expand ? 'assets/close.svg' : 'assets/hamburg.svg'" alt="">
+    <img :src="expand ? 'assets/ui/close.svg' : 'assets/ui/hamburg.svg'" alt="">
   </div>
 </template>
 <script>
