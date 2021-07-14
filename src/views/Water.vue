@@ -9,6 +9,7 @@
     </div>
     <div id="windows"></div>
   </div>
+  <Clock />
   <div class="progress-bar" id="progressBar">
     <div class="spinner-wrap" id="spinnerWrap">
       <div class="spinner-box">
@@ -38,11 +39,13 @@ import PumpTensionLineCharts from "../components/common/echarts/PumpTensionLineC
 import LowTensionLineCharts from "../components/common/echarts/LowTensionLineCharts";
 import HighTensionLineCharts from "../components/common/echarts/HighTensionLineCharts";
 import Hamburg from '../components/common/ui/Hamburg';
+import Clock from '../components/common/widgets/Clock';
 
 
 export default {
   components: {
-    Hamburg
+    Hamburg,
+    Clock
   },
   data() {
     return {
@@ -50,7 +53,7 @@ export default {
       infoExpand: false,
       models: [
         { name: 'assets/water.gltf', position: { x: 0, y: 0, z: 0 } }
-      ]
+      ],
     }
   },
   mounted() {
@@ -146,18 +149,6 @@ export default {
         };
       };
 
-      const interaction = new Interaction(renderer, worldScene, camera);
-
-      const cube = new THREE.Mesh(
-        new THREE.BoxGeometry(80, 80, 80),
-        new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .3, transparent: true}),
-      );
-      worldScene.add(cube);
-      cube.cursor = 'pointer';
-      cube.on('click', function(ev) {
-        this.makeLog(ev)
-      });
-
       // expose global objects
       window.camera = camera;
       window.worldScene = worldScene;
@@ -169,7 +160,6 @@ export default {
 
       this.render();
       this.initChartsPanel();
-      this.initLabels();
 
       window.addEventListener('resize', this.onWindowResize, false);
     },
@@ -245,35 +235,31 @@ export default {
         aline.create()
       })
     },
-    initLabels() {
-      let self = this;
-      let bumps = [];
+    initLabels(datas) {
+      const self = this;
+      let labels = [];
       const group = new THREE.Group();
 
-      for (let i = 0; i < 30; i++) {
-        bumps.push({
-          id: i,
+      datas.forEach((o, i) => {
+        labels.push({
+          id: i + 1,
+          uuid: o.uuid,
+          center: o.center,
           name: '加压泵#' + (i + 1),
           power: (Math.random() + 5).toFixed(2),
           voltage: (Math.random() + 380).toFixed(2),
           electric_current: (Math.random() + 10).toFixed(2),
           pressure: Math.random().toFixed(2)
         })
-      }
+      });
 
       const MAT_OVER = new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .3, transparent: true});
       const MAT_OUT = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: .3, transparent: true});
-      // const BUILDINGS_TEXTURE = new THREE.TextureLoader().load("assets/campusalbano/A2_40_V_010000_ao_BaseColor.jpg");
-      // const MAT = new THREE.MeshBasicMaterial({
-      //   color: new THREE.Color(0xffffff),
-      //   map: BUILDINGS_TEXTURE,
-      //   transparent: true,
-      //   side: THREE.DoubleSide
-      // });
 
-      bumps.map((o) => {
+      labels.map((o) => {
         const $label = document.createElement( 'div' );
         $label.className = o.power > 5.5 ? 'label danger' : 'label';
+        $label.setAttribute('target', o.uuid);
 
         $label.addEventListener( 'click', (event) => {
           event.stopPropagation();
@@ -283,14 +269,18 @@ export default {
             siblings[i].className = siblings[i].className.replace(' selected', '');
           }
           $label.className = $label.className + ' selected';
-          self.objectClickHandler(event, html);
+          worldScene.traverse((child) => {
+            if ( !child.isMesh ) return;
+            if ( child.uuid === o.uuid ) child.material = MAT_OVER;
+          });
+          self.objectClickHandler(event, html, {x: o.center.x / 100, y: o.center.y / 100, z: o.center.z / 100});
         }, false );
 
         $label.addEventListener( 'mouseover', (event) => {
           event.stopPropagation();
           worldScene.traverse((child) => {
             if ( !child.isMesh ) return;
-            child.material = MAT_OVER;
+            if ( child.uuid === o.uuid ) child.material = MAT_OVER;
           });
         }, false );
 
@@ -329,9 +319,9 @@ export default {
 
         const objectCSS = new CSS3DSprite( $label );
         objectCSS.doubleSided = true;
-        objectCSS.position.x = Math.random() * 100 - Math.random() * 100;
-        objectCSS.position.y = 5;
-        objectCSS.position.z = Math.random() * 100 - Math.random() * 100;
+        objectCSS.position.x = o.center.x / 100;
+        objectCSS.position.y = o.center.y / 100;
+        objectCSS.position.z = o.center.z / 100;
         objectCSS.scale.set(0.05, 0.05, 0.05);
         group.add(objectCSS);
       });
@@ -379,13 +369,13 @@ export default {
     toggleInfoWindows() {
       this.infoExpand = !this.infoExpand;
     },
-    objectClickHandler(e, html) {
+    objectClickHandler(e, html, newTarget) {
       orbitControls.update();
       const oldPosition = camera.position;
       const oldTarget = orbitControls.target;
       const newPosition = this.screenPointToThreeCoords(e.clientX, e.clientY, window, camera, 0);
       camera.lookAt(newPosition.x, newPosition.y, newPosition.z);
-      this.animateCamera(oldPosition, oldTarget, newPosition, newPosition)
+      this.animateCamera(oldPosition, oldTarget, newPosition, newTarget)
       this.makeInfoPanel(html)
     },
     // oldP  相机原来的位置
@@ -413,9 +403,9 @@ export default {
         z2: newT.z
       },1000);
       tween.onUpdate(() => {
-        // camera.position.x = object.x1;
-        // camera.position.y = object.y1;
-        // camera.position.z = object.z1;
+        camera.position.x = object.x1;
+        camera.position.y = object.y1;
+        camera.position.z = object.z1;
         orbitControls.target.x = object.x2;
         orbitControls.target.y = object.y2;
         orbitControls.target.z = object.z2;
@@ -441,10 +431,12 @@ export default {
       })
     },
     loadGltfModel(model, onLoaded) {
+      const self = this;
       const loadStartTime = performance.now();
       const loader = new GLTFLoader();
       const dracoLoader = new DRACOLoader();
       const MAT_BUILDING_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: .3, transparent: true});
+      let uuids = [];
       dracoLoader.setDecoderPath( 'assets/draco/' );
       dracoLoader.setDecoderConfig({ type: 'js' });
       dracoLoader.preload();
@@ -457,9 +449,12 @@ export default {
         scene.position.set(0, 0, 0);
         scene.traverse((child) => {
           if ( ! child.isMesh ) return;
+          uuids.push({uuid: child.uuid, center: self.getCenterPoint(child)});
+          self.getCenterPoint(child);
           child.material = MAT_BUILDING_TEXTURE;
         });
-        worldScene.add(scene)
+        worldScene.add(scene);
+        self.initLabels(uuids);
         onLoaded();
       }, this.onProgress, this.onError);
     },
@@ -472,6 +467,15 @@ export default {
     },
     onError(xhr) {
       console.log('err', xhr)
+    },
+    getCenterPoint(mesh) {
+      const middle = new THREE.Vector3();
+      const geometry = mesh.geometry;
+      geometry.computeBoundingBox();
+      middle.x = geometry.boundingBox.min.x + (geometry.boundingBox.max.x - geometry.boundingBox.min.x) / 2;
+      middle.y = geometry.boundingBox.min.y + (geometry.boundingBox.max.y - geometry.boundingBox.min.y) / 2;
+      middle.z = geometry.boundingBox.min.z + (geometry.boundingBox.max.z - geometry.boundingBox.min.z) / 2;
+      return middle;
     },
     render() {
       requestAnimationFrame(this.render);
@@ -628,6 +632,7 @@ export default {
   color: #efefef;
   transition: all .3s ease-out;
   position: relative;
+  border-radius: 3px 3px 3px 0;
 
   &::before {
     display: block;
