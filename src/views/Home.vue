@@ -1,13 +1,13 @@
 <template>
   <div class="home">
-    <ul>
-      <li><a href="/geojson">GeoJson</a></li>
-      <li><a href="/about">Cool</a></li>
-      <li><a href="/wire">Wire Frame</a></li>
-      <li><a href="/threemap">Three Map</a></li>
-      <li><a href="/cool">Cool</a></li>
-      <li><a href="/water">Water</a></li>
-    </ul>
+    <div>
+      <p><router-link to="/geojson">GeoJson</router-link></p>
+      <p><router-link to="/about">Cool</router-link></p>
+      <p><router-link to="/wire">Wire Frame</router-link></p>
+      <p><router-link to="/threemap">Three Map</router-link></p>
+      <p><router-link to="/cool">Cool</router-link></p>
+      <p><router-link to="/water">Water</router-link></p>
+    </div>
   </div>
 </template>
 
@@ -21,11 +21,9 @@ export default defineComponent({
 
 <style lang="scss">
 .home {
+  display:flex;
+  align-items: center;
+  justify-content: center;
   height: 100%;
-  ul {
-    padding: 50px;
-    list-style: none;
-    line-height: 1.4;
-  }
 }
 </style>

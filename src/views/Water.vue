@@ -5,7 +5,7 @@
   <Hamburg @toggleInfoPanels="toggleInfoPanels" />
   <div id="infoWindows" :class=" infoExpand ? 'info-windows right' : 'info-windows'">
     <div class="close-info-window" @click="toggleInfoWindows">
-      <img src="assets/close.svg" alt="">
+      <img src="assets//ui/close.svg" alt="">
     </div>
     <div id="windows"></div>
   </div>
@@ -72,6 +72,10 @@ export default {
         {
           video: 'rtsp://admin:URFJFO@192.168.10.113:554/h264/ch1/main/av_stream',
           name: 'Cam-03'
+        },
+        {
+          video: 'rtsp://weathercam.gsis.edu.hk/axis-media/media.amp',
+          name: 'Cam-HK'
         }
       ]
     }
@@ -276,11 +280,20 @@ export default {
       const MAT_OVER = new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .3, transparent: true});
       const MAT_OUT = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: .3, transparent: true});
 
+      
+
       labels.map((o) => {
         const $label = document.createElement( 'div' );
+        const name = document.createElement( 'div' );
+        const power = document.createElement( 'div' );
+        const voltage = document.createElement( 'div' );
+        const electric_current = document.createElement( 'div' );
+        const pressure = document.createElement( 'div' );
+        const objectCSS = new CSS3DSprite( $label );
+        
         $label.className = o.power > 5.5 ? 'label danger' : 'label';
         $label.setAttribute('target', o.uuid);
-
+        
         $label.addEventListener( 'click', (event) => {
           event.stopPropagation();
           const html = $label.innerHTML;
@@ -312,32 +325,27 @@ export default {
           });
         }, false );
 
-        const name = document.createElement( 'div' );
+        
         name.textContent = o.name;
         name.className = 'name';
         $label.appendChild(name);
 
-        const power = document.createElement( 'div' );
         power.innerHTML = self.htmlWrpper('功率', o.power, 'Kw');
         power.className = 'item';
         $label.appendChild(power);
 
-        const voltage = document.createElement( 'div' );
         voltage.innerHTML = self.htmlWrpper('电压', o.voltage, 'v');
         voltage.className = 'item';
         $label.appendChild(voltage);
 
-        const electric_current = document.createElement( 'div' );
         electric_current.innerHTML = self.htmlWrpper('电流', o.electric_current, 'A');
         electric_current.className = 'item';
         $label.appendChild(electric_current);
 
-        const pressure = document.createElement( 'div' );
         pressure.innerHTML = self.htmlWrpper('压力', o.pressure, 'MPa');
         pressure.className = 'item';
         $label.appendChild(pressure);
 
-        const objectCSS = new CSS3DSprite( $label );
         objectCSS.doubleSided = true;
         objectCSS.position.x = o.center.x / 100;
         objectCSS.position.y = o.center.y / 100;

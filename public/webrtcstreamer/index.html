@@ -29,7 +29,6 @@
       }
       window.onload = function () {
         this.webRtcServer = new WebRtcStreamer("video", webrtcConfig.url);
-        console.log(params)
         document.getElementById("title").innerHTML = url.name;
         webRtcServer.connect(url.video, url.audio, options);
         fetch(webrtcConfig.url + "/api/version").then(r => r.text()).then((response) => {
