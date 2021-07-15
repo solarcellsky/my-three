@@ -1,0 +1,6 @@
+var webrtcConfig = {
+	url: "http://localhost:8000",
+	options: "rtptransport=tcp&timeout=60",
+	layoutextraoptions: "&width=480&height=0",
+	defaultvideostream: "Bunny"
+}

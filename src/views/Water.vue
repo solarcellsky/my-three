@@ -10,6 +10,9 @@
     <div id="windows"></div>
   </div>
   <Clock />
+  <div class="cam-panel-container">
+    <CamPlayer v-for="(v, k) in cams" :key="k" :stream="v.video" :name="v.name" />
+  </div>
   <div class="progress-bar" id="progressBar">
     <div class="spinner-wrap" id="spinnerWrap">
       <div class="spinner-box">
@@ -55,8 +58,22 @@ export default {
       panelExpand: true,
       infoExpand: false,
       models: [
-        { name: 'assets/temp/dsf.fbx', position: { x: 0, y: 0, z: 0 } }
+        { name: 'assets/temp/water.fbx', position: { x: 0, y: 0, z: 0 } }
       ],
+      cams: [
+        {
+          video: 'rtsp://174.6.126.86/axis-media/media.amp',
+          name: 'Cam-01'
+        },
+        {
+          video: 'rtsp://157.157.138.235/axis-media/media.amp',
+          name: 'Cam-02'
+        },
+        {
+          video: 'rtsp://admin:URFJFO@192.168.10.113:554/h264/ch1/main/av_stream',
+          name: 'Cam-03'
+        }
+      ]
     }
   },
   mounted() {
@@ -428,7 +445,7 @@ export default {
         self.loadGltfModel(model, () => {
           ++ numLoadedModels;
           if ( numLoadedModels === models.length ) {
-            self.makeLog('All models loaded');
+            self.makeLog('All models loaded', 'info');
           }
         })
       })
@@ -452,8 +469,7 @@ export default {
       };
       loader.manager = loadingManager;
       loader.load( model.name, function (object) {
-        console.log(object)
-        self.makeLog('Load time: ' + ( performance.now() - loadStartTime ).toFixed( 2 ) + ' ms.');
+        self.makeLog('Load time: ' + ( performance.now() - loadStartTime ).toFixed( 2 ) + ' ms.', 'info');
         let scene;
         if (isFbx) { 
           scene = object;
@@ -481,7 +497,7 @@ export default {
       }
     },
     onError(xhr) {
-      console.log('err', xhr)
+      this.makeLog('Error loading model: ' + xhr, 'error');
     },
     getCenterPoint(mesh) {
       const middle = new THREE.Vector3();
@@ -510,8 +526,17 @@ export default {
     toggleInfoPanels(v) {
       this.panelExpand = v;
     },
-    makeLog(info) {
-      console.log('%c INFO => %c' + ' ' + info, 'color: #fff; background: #41b882; padding: 3px 4px;', 'color: #41b882; background: #fff;');
+    makeLog(msg, type) {
+      switch (type) {
+        case 'info':
+          console.log('%c INFO => %c' + ' ' + msg, 'color: #fff; background: #41b882; padding: 3px 4px;', 'color: #41b882; background: #fff;');
+          break;
+        case 'error':
+          console.log('%c ERROR => %c' + ' ' + msg, 'color: #fff; background: #f56c6c; padding: 3px 4px;', 'color: #f56c6c; background: #fff;');
+          break;
+        default:
+          console.log('%c INFO => %c' + ' ' + msg, 'color: #fff; background: #41b882; padding: 3px 4px;', 'color: #41b882; background: #fff;');
+      }
     }
   }
 };
@@ -761,6 +786,13 @@ export default {
     border-radius: 5px;
     box-shadow: 0 0 6px rgba(0, 0, 0, .5);
   }
+}
+
+.cam-panel-container {
+  display: flex;
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
 }
 
 @-webkit-keyframes rotate {

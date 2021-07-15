@@ -1,0 +1,50 @@
+<html>
+
+<head>
+  <title>WebRTC Streamer</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <h2 id="title"></h2>
+    <video id="video" muted playsinline controls></video>
+    <footer id="footer" class="footer"></footer>
+  </div>
+  <script src="libs/adapter.min.js"></script>
+  <script src="js/webrtcstreamer.json"></script>
+  <script src="js/webrtcstreamer.js"></script>
+  <script>
+    if (location.search.slice(1)) {
+      var url = { video: location.search.slice(1) };
+      var options = webrtcConfig.options;
+      if (typeof URLSearchParams != 'undefined') {
+        var params = new URLSearchParams(location.search);
+        if (params.has("video") || params.has("name") || params.has("audio")) {
+          url = { video: params.get("video"), audio: params.get("audio"), name: params.get("name") };
+        }
+        if (params.has("options")) {
+          options = params.get("options");
+        }
+      }
+      window.onload = function () {
+        this.webRtcServer = new WebRtcStreamer("video", webrtcConfig.url);
+        console.log(params)
+        document.getElementById("title").innerHTML = url.name;
+        webRtcServer.connect(url.video, url.audio, options);
+        fetch(webrtcConfig.url + "/api/version").then(r => r.text()).then((response) => {
+          document.getElementById("footer").innerHTML = "WebRTC-Streamer " + JSON.parse(response).split(" ")[0];
+        });
+      }
+      window.onbeforeunload = function () { this.webRtcServer.disconnect() }
+    } else {
+      if (typeof URLSearchParams != 'undefined') {
+        alert("WebRTC stream name to connect is missing\n\nUsage :" + window.location + "?video=<WebRTC video stream name>&audio=<WebRTC audio stream name>&options=<WebRTC options>")
+      } else {
+        alert("WebRTC stream name to connect is missing\n\nUsage :" + window.location + "?<WebRTC video stream name>")
+      }
+    }
+  </script>
+</body>
+
+</html>
