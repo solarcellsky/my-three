@@ -58,7 +58,8 @@ export default {
       panelExpand: true,
       infoExpand: false,
       models: [
-        { name: 'assets/temp/water.fbx', position: { x: 0, y: 0, z: 0 } }
+        { name: 'assets/models/water/dx03.fbx', position: { x: 0, y: 0, z: 0 } },
+        { name: 'assets/models/water/laibu_bf.fbx', position: { x: 0, y: 0, z: 0 } }
       ],
       cams: [
         {
@@ -88,8 +89,8 @@ export default {
     initThree() {
       const container = document.getElementById('gl');
       const camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 10000 );
-      camera.position.set( 200, 60, 200 );
-      camera.lookAt( 0, 0, 0 );
+      camera.position.set( 250, 60, 300 );
+      camera.lookAt( -50, 0, -100 );
 
       const worldScene = new THREE.Scene();
       const sceneCSS = new THREE.Scene();
@@ -115,19 +116,22 @@ export default {
       // performance monitor
       const stats = new Stats();
       container.appendChild( renderer.domElement );
-      // container.appendChild( stats.dom );
+      container.appendChild( stats.dom );
 
       // orbit controls
       const orbitControls = new OrbitControls( camera, rendererCSS.domElement );
       orbitControls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
       orbitControls.dampingFactor = 0.25;
-      orbitControls.screenSpacePanning = false;
-      orbitControls.minPolarAngle = Math.PI / 3;
-      orbitControls.maxPolarAngle = Math.PI / 2.3;
+      orbitControls.screenSpacePanning = true;
+      orbitControls.minPolarAngle = 0;
+      orbitControls.maxPolarAngle = Math.PI / 2;
       orbitControls.maxDistance = 400;
-      orbitControls.minDistance = 50;
+      orbitControls.minDistance = 5;
       // orbitControls.autoRotate = true;
       orbitControls.autoRotateSpeed = 0.08;
+      orbitControls.target.x = 50;
+      orbitControls.target.y = 0;
+      orbitControls.target.z = 100;
       orbitControls.listenToKeyEvents( window );
 
       // lights
@@ -249,15 +253,15 @@ export default {
         }
       ];
 
-      tubeOptions.map((option) => {
-        const tube = new ArrowFlow(option, worldScene);
-        tube.create()
-      })
+      // tubeOptions.map((option) => {
+      //   const tube = new ArrowFlow(option, worldScene);
+      //   tube.create()
+      // })
 
-      alineOptins.map((option) => {
-        const aline = new AnimateLine(option, worldScene);
-        aline.create()
-      })
+      // alineOptins.map((option) => {
+      //   const aline = new AnimateLine(option, worldScene);
+      //   aline.create()
+      // })
     },
     initLabels(datas) {
       const self = this;
@@ -268,8 +272,9 @@ export default {
         labels.push({
           id: i + 1,
           uuid: o.uuid,
+          name: o.name,
           center: o.center,
-          name: '加压泵#' + (i + 1),
+          position: o.position,
           power: (Math.random() + 5).toFixed(2),
           voltage: (Math.random() + 380).toFixed(2),
           electric_current: (Math.random() + 10).toFixed(2),
@@ -277,7 +282,7 @@ export default {
         })
       });
 
-      const MAT_OVER = new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .3, transparent: true});
+      const MAT_OVER = new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .8, transparent: true});
       const MAT_OUT = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: .3, transparent: true});
 
       
@@ -293,7 +298,7 @@ export default {
         
         $label.className = o.power > 5.5 ? 'label danger' : 'label';
         $label.setAttribute('target', o.uuid);
-        
+
         $label.addEventListener( 'click', (event) => {
           event.stopPropagation();
           const html = $label.innerHTML;
@@ -306,7 +311,7 @@ export default {
             if ( !child.isMesh ) return;
             if ( child.uuid === o.uuid ) child.material = MAT_OVER;
           });
-          self.objectClickHandler(event, html, {x: o.center.x / 100, y: o.center.y / 100, z: o.center.z / 100});
+          self.objectClickHandler(event, html, {x: o.center.x, y: o.center.y, z: o.center.z});
         }, false );
 
         $label.addEventListener( 'mouseover', (event) => {
@@ -321,7 +326,7 @@ export default {
           event.stopPropagation();
           worldScene.traverse((child) => {
             if ( !child.isMesh ) return;
-            child.material = MAT_OUT;
+            if ( child.uuid === o.uuid ) child.material = MAT_OUT;
           });
         }, false );
 
@@ -347,14 +352,21 @@ export default {
         $label.appendChild(pressure);
 
         objectCSS.doubleSided = true;
-        objectCSS.position.x = o.center.x / 100;
-        objectCSS.position.y = o.center.y / 100;
-        objectCSS.position.z = o.center.z / 100;
-        objectCSS.scale.set(0.05, 0.05, 0.05);
+        objectCSS.position.x = o.center.x;
+        objectCSS.position.y = o.center.y;
+        objectCSS.position.z = o.center.z;
+        objectCSS.scale.set(0.02, 0.02, 0.02);
         group.add(objectCSS);
       });
 
       sceneCSS.add( group );
+    },
+    changePivot(x, y, z, obj){
+      let wrapper = new THREE.Object3D();
+          wrapper.position.set(-x, -y, -z);
+          wrapper.add(obj);
+          obj.position.set(x, y, z);
+          return wrapper;
     },
     screenPointToThreeCoords(x, y, domContainer, camera, targetZ) {
       let vec = new THREE.Vector3(); // create once and reuse
@@ -453,7 +465,7 @@ export default {
         self.loadGltfModel(model, () => {
           ++ numLoadedModels;
           if ( numLoadedModels === models.length ) {
-            self.makeLog('All models loaded', 'info');
+            self.makeLog( numLoadedModels + ' models loaded', 'info');
           }
         })
       })
@@ -461,12 +473,14 @@ export default {
     loadGltfModel(model, onLoaded) {
       let loader;
       let uuids = [];
+      const scale = 0.01;
       const self = this;
       const dracoLoader = new DRACOLoader();
       dracoLoader.setDecoderPath( 'assets/draco/' );
       dracoLoader.setDecoderConfig({ type: 'js' });
       dracoLoader.preload();
-      const MAT_BUILDING_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: .3, transparent: true});
+      const MAT_BUILDING_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0xff0000), opacity: .6, transparent: true});
+      const MAT_BUILDING_OPACITY_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: 。3, transparent: true});
       const loadStartTime = performance.now();
       const isFbx = model.name.indexOf('.fbx') > 0;
       if (isFbx) { 
@@ -484,13 +498,24 @@ export default {
         } else {
           scene = object.scene;
         };
-        scene.scale.set(0.01, 0.01, 0.01);
+        scene.scale.set(scale, scale, scale);
         scene.position.set(0, 0, 0);
         scene.traverse((child) => {
           if ( ! child.isMesh ) return;
-          uuids.push({uuid: child.uuid, center: self.getCenterPoint(child)});
-          self.getCenterPoint(child);
-          child.material = MAT_BUILDING_TEXTURE;
+          const isLabel = child.name.indexOf('真空表') >= 0 || child.name.indexOf('压力表') >= 0 || child.name.indexOf('电动蝶阀') >= 0;
+
+          if (isLabel) {
+            uuids.push({
+              uuid: child.uuid, 
+              name: child.name, 
+              position: {x: child.position.x * scale, y: child.position.y * scale, z: child.position.z * scale}, 
+              center: self.getCentroid(child)
+            })
+
+            child.material = MAT_BUILDING_TEXTURE;
+          } else {
+            child.material = MAT_BUILDING_OPACITY_TEXTURE;
+          }
         });
         worldScene.add(scene);
         self.initLabels(uuids);
@@ -511,10 +536,35 @@ export default {
       const middle = new THREE.Vector3();
       const geometry = mesh.geometry;
       geometry.computeBoundingBox();
-      middle.x = geometry.boundingBox.min.x + (geometry.boundingBox.max.x - geometry.boundingBox.min.x) / 2;
-      middle.y = geometry.boundingBox.min.y + (geometry.boundingBox.max.y - geometry.boundingBox.min.y) / 2;
-      middle.z = geometry.boundingBox.min.z + (geometry.boundingBox.max.z - geometry.boundingBox.min.z) / 2;
+      const boundingBox = geometry.boundingBox;
+      middle.x = (boundingBox.max.x - boundingBox.min.x) * 0.5;
+      middle.y = (boundingBox.max.y - boundingBox.min.y) * 0.5;
+      middle.z = (boundingBox.max.z - boundingBox.min.z) * 0.5;
       return middle;
+    },
+    getCentroid(mesh) {
+
+        mesh.geometry.computeBoundingBox();
+        const boundingBox = mesh.geometry.boundingBox;
+
+        const x0 = boundingBox.max.x;
+        const x1 = boundingBox.min.x;
+        const y0 = boundingBox.max.y;
+        const y1 = boundingBox.min.y;
+        const z0 = boundingBox.max.z;
+        const z1 = boundingBox.min.z;
+
+
+        const bWidth = ( x0 > x1 ) ? x0 - x1 : x1 - x0;
+        const bHeight = ( y0 > y1 ) ? y0 - y1 : y1 - y0;
+        const bDepth = ( z0 > z1 ) ? z0 - z1 : z1 - z0;
+
+        const centroidX = x0 + ( bWidth / 2 ) + mesh.position.x;
+        const centroidY = y0 + ( bHeight / 2 )+ mesh.position.y;
+        const centroidZ = z0 + ( bDepth / 2 ) + mesh.position.z;
+
+        return { x : centroidX * 0.01 - 3, y : centroidY * 0.01, z : centroidZ * 0.01 - 1 };
+
     },
     render() {
       requestAnimationFrame(this.render);
@@ -702,7 +752,7 @@ export default {
   }
 
   &:hover {
-    background: rgba(0, 0, 0, .88);
+    background: rgba(0, 0, 0, .86);
     box-shadow: 0px 0px 12px rgba(0, 0, 0, .5);
     border: 1px solid rgba(0, 0, 0, .75);
   }
@@ -797,7 +847,6 @@ export default {
 }
 
 .cam-panel-container {
-  display: flex;
   position: absolute;
   right: 10px;
   bottom: 10px;
