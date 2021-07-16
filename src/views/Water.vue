@@ -480,7 +480,7 @@ export default {
       dracoLoader.setDecoderConfig({ type: 'js' });
       dracoLoader.preload();
       const MAT_BUILDING_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0xff0000), opacity: .6, transparent: true});
-      const MAT_BUILDING_OPACITY_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: 。3, transparent: true});
+      const MAT_BUILDING_OPACITY_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: .3, transparent: true});
       const loadStartTime = performance.now();
       const isFbx = model.name.indexOf('.fbx') > 0;
       if (isFbx) { 
