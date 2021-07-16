@@ -11,7 +11,7 @@
   </div>
   <Clock />
   <div class="cam-panel-container">
-    <CamPlayer v-for="(v, k) in cams" :key="k" :stream="v.video" :name="v.name" />
+    <!-- <CamPlayer v-for="(v, k) in cams" :key="k" :stream="v.video" :name="v.name" /> -->
   </div>
   <div class="progress-bar" id="progressBar">
     <div class="spinner-wrap" id="spinnerWrap">
