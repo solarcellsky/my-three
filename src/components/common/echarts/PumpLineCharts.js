@@ -9,8 +9,8 @@ export default class PumpLineCharts {
     const target = document.getElementById(this.options.container);
     const dom = document.createElement('div');
     dom.setAttribute('style', 'width: 360px;height: 180px;backgroud: rgba(255, 255, 255, .618);margin: 0 0 10px;');
-    const chart = echarts.init(dom);
     target.appendChild(dom);
+    const chart = echarts.init(dom);
     chart.showLoading();
     axios.get('assets/fakeapi/pp.json').then(function(res) {
       // handle success

@@ -9,8 +9,8 @@ export default class HighTensionLineCharts {
     const target = document.getElementById(this.options.container);
     const dom = document.createElement('div');
     dom.setAttribute('style', 'width: 360px;height: 188px;backgroud: rgba(255, 255, 255, .618);margin: 0 0 10px;');
-    const chart = echarts.init(dom);
     target.appendChild(dom);
+    const chart = echarts.init(dom);
     chart.showLoading();
     const colors = ['#E6A23C', '#67C23A'];
     axios.get('assets/fakeapi/ht.json').then(function(res) {

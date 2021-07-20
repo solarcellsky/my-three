@@ -13,6 +13,7 @@
   <!-- <div class="cam-panel-container">
     <CamPlayer v-for="(v, k) in cams" :key="k" :stream="v.video" :name="v.name" />
   </div> -->
+  <div id="labels"></div>
   <div class="progress-bar" id="progressBar">
     <div class="spinner-wrap" id="spinnerWrap">
       <div class="spinner-box">
@@ -273,6 +274,7 @@ export default {
           id: i + 1,
           uuid: o.uuid,
           name: o.name,
+          center: o.center,
           position: o.position,
           power: (Math.random() + 5).toFixed(2),
           voltage: (Math.random() + 380).toFixed(2),
@@ -281,22 +283,19 @@ export default {
         })
       });
 
-      const MAT_OVER = new THREE.MeshPhongMaterial({color: new THREE.Color(0xff0000), opacity: .8, transparent: true});
-      const MAT_OUT = new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .3, transparent: true});
+      const MAT_OVER = new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .8, transparent: true});
+      const MAT_OUT = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: .3, transparent: true});
 
       
 
       labels.map((o) => {
-        const $labelWrapper = document.createElement('div');
-        $labelWrapper.className = 'label-wrapper';
         const $label = document.createElement( 'div' );
         const name = document.createElement( 'div' );
         const power = document.createElement( 'div' );
         const voltage = document.createElement( 'div' );
         const electric_current = document.createElement( 'div' );
         const pressure = document.createElement( 'div' );
-
-        const objectCSS = new CSS3DSprite( $labelWrapper );
+        const objectCSS = new CSS3DSprite( $label );
         
         $label.className = o.power > 5.5 ? 'label danger' : 'label';
         $label.setAttribute('target', o.uuid);
@@ -304,11 +303,11 @@ export default {
         $label.addEventListener( 'click', (event) => {
           event.stopPropagation();
           const html = $label.innerHTML;
-          const siblings = $labelWrapper.parentNode.children;
+          const siblings = $label.parentNode.children;
           for (let i = 0; i < siblings.length; i++) {
             siblings[i].className = siblings[i].className.replace(' selected', '');
           }
-          $labelWrapper.className = $labelWrapper.className + ' selected';
+          $label.className = $label.className + ' selected';
           worldScene.traverse((child) => {
             if ( !child.isMesh ) return;
             if ( child.uuid === o.uuid ) child.material = MAT_OVER;
@@ -353,12 +352,10 @@ export default {
         pressure.className = 'item';
         $label.appendChild(pressure);
 
-        $labelWrapper.appendChild( $label );
-
         objectCSS.doubleSided = true;
-        objectCSS.position.x = o.position.x;
-        objectCSS.position.y = o.position.y;
-        objectCSS.position.z = o.position.z;
+        objectCSS.position.x = o.center.x;
+        objectCSS.position.y = o.center.y;
+        objectCSS.position.z = o.center.z;
         objectCSS.scale.set(0.02, 0.02, 0.02);
         group.add(objectCSS);
       });
@@ -449,9 +446,9 @@ export default {
         z2: newT.z
       },1000);
       tween.onUpdate(() => {
-        camera.position.x = newP.x;
-        camera.position.y = newP.y;
-        camera.position.z = newP.z;
+        camera.position.x = object.x1;
+        camera.position.y = object.y1;
+        camera.position.z = object.z1;
         orbitControls.target.x = object.x2;
         orbitControls.target.y = object.y2;
         orbitControls.target.z = object.z2;
@@ -485,7 +482,7 @@ export default {
       dracoLoader.setDecoderPath( 'assets/draco/' );
       dracoLoader.setDecoderConfig({ type: 'js' });
       dracoLoader.preload();
-      const MAT_BUILDING_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .6, transparent: true});
+      const MAT_BUILDING_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0xff0000), opacity: .6, transparent: true});
       const MAT_BUILDING_OPACITY_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: .3, transparent: true});
       const loadStartTime = performance.now();
       const isFbx = model.name.indexOf('.fbx') > 0;
@@ -514,8 +511,8 @@ export default {
             uuids.push({
               uuid: child.uuid, 
               name: child.name, 
-              position: {x: child.position.x * scale, y: child.position.y * scale, z: child.position.z * scale},
-              geometry: child.geometry,
+              position: {x: child.position.x * scale, y: child.position.y * scale, z: child.position.z * scale}, 
+              center: self.getCentroid(child)
             })
 
             child.material = MAT_BUILDING_TEXTURE;
@@ -724,60 +721,55 @@ export default {
     box-shadow: 0 0 6px rgba(0, 0, 0, .5);
   }
 }
-.label-wrapper {
 
-  &.selected {
-    & .label {
-      background: rgba(46, 164, 79, 0.87) !important;
-    }
+.label {
+  width: 120px;
+  background: rgba(0, 0, 0, .618);
+  border: 1px solid rgba(0, 0, 0, .25);
+  text-align: left;
+  line-height: normal;
+  padding: 10px;
+  cursor: pointer;
+  color: #efefef;
+  transition: all .3s ease-out;
+  position: relative;
+  border-radius: 3px 3px 3px 0;
+
+  &::before {
+    display: block;
+    content: '';
+    position: absolute;
+    left: -12px;
+    bottom: -37px;
+    height: 40px;
+    border-left: 1px solid rgba(0, 0, 0, .85);
+    transform: rotate(35deg);
   }
 
-  & .label {
-    position: absolute;
-    right: -140px;
-    top: -140px;
-    width: 120px;
-    background: rgba(0, 0, 0, .618);
-    border: 1px solid rgba(0, 0, 0, .25);
-    text-align: left;
-    line-height: normal;
-    padding: 10px;
-    cursor: pointer;
-    color: #efefef;
-    transition: all .3s ease-out;
-    border-radius: 3px 3px 3px 0;
+  &.danger {
+    background: rgba(245, 108, 108, 0.87);
+  }
 
-    &::before {
-      display: block;
-      content: '';
-      position: absolute;
-      left: -12px;
-      bottom: -37px;
-      height: 40px;
-      border-left: 1px solid rgba(0, 0, 0, .85);
-      transform: rotate(35deg);
-    }
+  &.selected {
+    background: rgba(46, 164, 79, 0.87);
+  }
 
-    &.danger {
-      background: rgba(245, 108, 108, 0.87);
-    }
+  &:hover {
+    background: rgba(0, 0, 0, .86);
+    box-shadow: 0px 0px 12px rgba(0, 0, 0, .5);
+    border: 1px solid rgba(0, 0, 0, .75);
+  }
+  & .item {
+    font-size: 10px;
+    display: flex;
 
-    &:hover {
-      background: rgba(0, 0, 0, .86);
-      box-shadow: 0px 0px 12px rgba(0, 0, 0, .5);
-      border: 1px solid rgba(0, 0, 0, .75);
-    }
-    & .item {
-      font-size: 10px;
-      display: flex;
-
-      & .v {
-        flex: 1;
-        text-align: right;
-      }
+    & .v {
+      flex: 1;
+      text-align: right;
     }
   }
 }
+
 
 .info-windows {
   position: fixed;
