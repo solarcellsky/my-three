@@ -6,7 +6,6 @@ export default class ArrowFlow {
     this.scene = scene;
   }
   create() {
-    let self = this;
     let curveArr = []
     const path = this.options.path
     const radius = this.options.radius

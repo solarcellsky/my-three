@@ -1,5 +1,5 @@
 <template>
-<div class="container" id="container">
+<div class="three-container" id="container">
   <div class="gl" id="gl"></div>
   <div id="echarts" :class="panelExpand ? 'echarts expand' : 'echarts'"></div>
   <Hamburg @toggleInfoPanels="toggleInfoPanels" />
@@ -57,9 +57,11 @@ export default {
     return {
       panelExpand: true,
       infoExpand: false,
+      uuid: null,
       models: [
         { name: 'assets/models/water/dx03.fbx', position: { x: 0, y: 0, z: 0 } },
-        { name: 'assets/models/water/laibu_bf.fbx', position: { x: 0, y: 0, z: 0 } }
+        { name: 'assets/models/water/BF_neibu.fbx', position: { x: 0, y: 0, z: 0 } }
+        // { name: 'assets/models/TET.glb', position: { x: 0, y: 0, z: 0 } }
       ],
       cams: [
         {
@@ -83,7 +85,6 @@ export default {
   },
   mounted() {
     this.initThree();
-    this.loadModels(this.models);
   },
   methods: {
     initThree() {
@@ -97,13 +98,15 @@ export default {
 
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
-        alpha: true
+        alpha: true,
+        logarithmicDepthBuffer: true
       });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setClearColor(0xcaeceb);
       renderer.setSize( window.innerWidth, window.innerHeight );
       renderer.outputEncoding = THREE.LinearEncoding;
       renderer.shadowMap.enabled = true;
+      renderer.sortObjects = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
       const rendererCSS = new CSS3DRenderer();
@@ -116,7 +119,7 @@ export default {
       // performance monitor
       const stats = new Stats();
       container.appendChild( renderer.domElement );
-      container.appendChild( stats.dom );
+      // container.appendChild( stats.dom );
 
       // orbit controls
       const orbitControls = new OrbitControls( camera, rendererCSS.domElement );
@@ -135,7 +138,7 @@ export default {
       orbitControls.listenToKeyEvents( window );
 
       // lights
-      const directionalLight = new THREE.DirectionalLight(0xffffff);
+      const directionalLight = new THREE.DirectionalLight(0xefefef);
       const hemisphereLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1 );
       const directionalLightHelper = new THREE.DirectionalLightHelper( directionalLight, 150, new THREE.Color(0xff0000) );
       const hemisphereLightHelper = new THREE.HemisphereLightHelper( hemisphereLight, 100, new THREE.Color(0x202020) );
@@ -143,7 +146,7 @@ export default {
       lightGroup.add(directionalLight, hemisphereLight);
       worldScene.add(lightGroup);
 
-      const worldSceneBackground = new THREE.TextureLoader().load("assets/texture/terrain-wireframe.jpeg");
+      const worldSceneBackground = new THREE.TextureLoader().load("assets/ui/background.jpg");
       worldScene.background = worldSceneBackground;
       const axesHelper = new THREE.AxesHelper(360);
       const gridHelper = new THREE.GridHelper(666, 160, new THREE.Color(0x00ffff), new THREE.Color(0x202020));
@@ -152,7 +155,7 @@ export default {
       gridHelper.position.y = -5;
       gridHelper.material.opacity = 0.25;
       gridHelper.material.transparent = true;
-      worldScene.add(helperGroup);
+      // worldScene.add(helperGroup);
 
       const compass = new Compass({
         container: 'container',
@@ -188,6 +191,7 @@ export default {
 
       this.render();
       this.initChartsPanel();
+      this.loadModels(this.models);
 
       window.addEventListener('resize', this.onWindowResize, false);
     },
@@ -282,7 +286,7 @@ export default {
       });
 
       const MAT_OVER = new THREE.MeshPhongMaterial({color: new THREE.Color(0xff0000), opacity: .8, transparent: true});
-      const MAT_OUT = new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .3, transparent: true});
+      const MAT_OUT = new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .8, transparent: true});
 
       
 
@@ -298,12 +302,16 @@ export default {
 
         const objectCSS = new CSS3DSprite( $labelWrapper );
         
-        $label.className = o.power > 5.5 ? 'label danger' : 'label';
+        // $label.className = o.power > 5.5 ? 'label danger' : 'label';
+        $label.className = 'label';
         $label.setAttribute('target', o.uuid);
 
         $label.addEventListener( 'click', (event) => {
           event.stopPropagation();
+          this.uuid = null;
           const html = $label.innerHTML;
+          const uuid = $label.getAttribute('target');
+          this.uuid = uuid;
           const siblings = $labelWrapper.parentNode.children;
           for (let i = 0; i < siblings.length; i++) {
             siblings[i].className = siblings[i].className.replace(' selected', '');
@@ -313,7 +321,8 @@ export default {
             if ( !child.isMesh ) return;
             if ( child.uuid === o.uuid ) child.material = MAT_OVER;
           });
-          self.objectClickHandler(event, html, {x: o.position.x, y: o.position.y, z: o.position.z});
+          const $target = new THREE.Vector3(o.position.x, o.position.y, o.position.z);
+          self.objectClickHandler(event, html, $target);
         }, false );
 
         $label.addEventListener( 'mouseover', (event) => {
@@ -324,11 +333,11 @@ export default {
           });
         }, false );
 
-        $label.addEventListener( 'mouseleave', (event) => {
+        $label.addEventListener( 'mouseout', (event) => {
           event.stopPropagation();
           worldScene.traverse((child) => {
             if ( !child.isMesh ) return;
-            if ( child.uuid === o.uuid ) child.material = MAT_OUT;
+            if ( child.uuid === o.uuid) child.material = MAT_OUT;
           });
         }, false );
 
@@ -359,20 +368,11 @@ export default {
         objectCSS.position.x = o.position.x;
         objectCSS.position.y = o.position.y;
         objectCSS.position.z = o.position.z;
-        objectCSS.scale.set(0.02, 0.02, 0.02);
+        objectCSS.scale.set(0.01, 0.01, 0.01);
         group.add(objectCSS);
       });
 
       sceneCSS.add( group );
-    },
-    changePivot(obj){
-      let wrapper = new THREE.Object3D();
-          wrapper.position.set(obj.position.x, obj.position.y, obj.position.z);
-          wrapper.add(obj);
-          wrapper.scale.set(0.02, 0.02, 0.02);
-          obj.position.set(obj.position.x - 2, obj.position.y - 2, obj.position.z - 2);
-          console.log(wrapper);
-          return wrapper;
     },
     screenPointToThreeCoords(x, y, domContainer, camera, targetZ) {
       let vec = new THREE.Vector3(); // create once and reuse
@@ -422,6 +422,7 @@ export default {
       const newPosition = this.screenPointToThreeCoords(e.clientX, e.clientY, window, camera, 0);
       camera.lookAt(newPosition.x, newPosition.y, newPosition.z);
       this.animateCamera(oldPosition, oldTarget, newPosition, newTarget)
+      console.log(oldPosition, oldTarget, newPosition, newTarget);
       this.makeInfoPanel(html)
     },
     // oldP  相机原来的位置
@@ -449,12 +450,12 @@ export default {
         z2: newT.z
       },1000);
       tween.onUpdate(() => {
-        camera.position.x = newP.x;
-        camera.position.y = newP.y;
-        camera.position.z = newP.z;
-        orbitControls.target.x = object.x2;
-        orbitControls.target.y = object.y2;
-        orbitControls.target.z = object.z2;
+        camera.position.x = newT.x + 6;
+        camera.position.y = newT.y + 6;
+        camera.position.z = newT.z + 6;
+        orbitControls.target.x = object.x2 + 4;
+        orbitControls.target.y = object.y2 + 4;
+        orbitControls.target.z = object.z2 + 4;
         orbitControls.update();
       })
       tween.onComplete(() => {
@@ -467,8 +468,8 @@ export default {
     loadModels(models) {
       let self = this;
       let numLoadedModels = 0;
-      models.map((model) => {
-        self.loadGltfModel(model, () => {
+      models.map((model, index) => {
+        self.loadGltfModel(model, index, () => {
           ++ numLoadedModels;
           if ( numLoadedModels === models.length ) {
             self.makeLog( numLoadedModels + ' models loaded', 'info');
@@ -476,7 +477,7 @@ export default {
         })
       })
     },
-    loadGltfModel(model, onLoaded) {
+    loadGltfModel(model, rendOrder, onLoaded) {
       let loader;
       let uuids = [];
       const scale = 0.01;
@@ -485,8 +486,21 @@ export default {
       dracoLoader.setDecoderPath( 'assets/draco/' );
       dracoLoader.setDecoderConfig({ type: 'js' });
       dracoLoader.preload();
-      const MAT_BUILDING_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0x2ea44f), opacity: .6, transparent: true});
-      const MAT_BUILDING_OPACITY_TEXTURE = new THREE.MeshPhongMaterial({color: new THREE.Color(0x666666), opacity: .3, transparent: true});
+      const MAT_METER_TEXTURE = new THREE.MeshPhongMaterial({
+        color: new THREE.Color(0x2ea44f),
+        opacity: .6, 
+        transparent: true
+      });
+      const MAT_TUBE_TEXTURE = new THREE.MeshPhongMaterial({
+        color: new THREE.Color(0x0000ff),
+        opacity: .6,
+        transparent: true
+      });
+      const MAT_BUILDING_TEXTURE = new THREE.MeshPhongMaterial({
+        color: new THREE.Color(0x999999),
+        opacity: .3,
+        transparent: true
+      });
       const loadStartTime = performance.now();
       const isFbx = model.name.indexOf('.fbx') > 0;
       if (isFbx) { 
@@ -506,21 +520,26 @@ export default {
         };
         scene.scale.set(scale, scale, scale);
         scene.position.set(0, 0, 0);
+        scene.rendOrder = rendOrder;
         scene.traverse((child) => {
           if ( ! child.isMesh ) return;
-          const isLabel = child.name.indexOf('真空表') >= 0 || child.name.indexOf('压力表') >= 0 || child.name.indexOf('电动蝶阀') >= 0;
-
-          if (isLabel) {
+          const isLabel = child.name.indexOf('真空表') >= 0 || child.name.indexOf('压力表') >= 0 || child.name.indexOf('泵') >= 0  || child.name.indexOf('阀') >= 0;
+          const isTube = child.name.indexOf('管道') >= 0;
+          if (isLabel || isTube) {
             uuids.push({
               uuid: child.uuid, 
               name: child.name, 
               position: {x: child.position.x * scale, y: child.position.y * scale, z: child.position.z * scale},
               geometry: child.geometry,
             })
-
-            child.material = MAT_BUILDING_TEXTURE;
+            if (isLabel) {
+              child.material = MAT_METER_TEXTURE;
+            } else {
+              child.material = MAT_TUBE_TEXTURE;
+            }
           } else {
-            child.material = MAT_BUILDING_OPACITY_TEXTURE;
+            child.material = MAT_BUILDING_TEXTURE;
+            // child.material.visible = false;
           }
         });
         worldScene.add(scene);
@@ -607,7 +626,7 @@ export default {
 </script>
 
 <style lang="scss">
-.container {
+.three-container {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -728,7 +747,7 @@ export default {
 
   &.selected {
     & .label {
-      background: rgba(46, 164, 79, 0.87) !important;
+      background: rgba(64, 158, 255, 0.87) !important;
     }
   }
 
@@ -737,7 +756,7 @@ export default {
     right: -140px;
     top: -140px;
     width: 120px;
-    background: rgba(0, 0, 0, .618);
+    background: rgba(0, 0, 0, .56);
     border: 1px solid rgba(0, 0, 0, .25);
     text-align: left;
     line-height: normal;

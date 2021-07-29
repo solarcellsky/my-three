@@ -1,5 +1,15 @@
 <template>
-  <div id="mapView"></div>
+  <div id="mapView">
+    <div class="progress-bar" id="progressBar">
+      <div class="spinner-wrap" id="spinnerWrap">
+        <div class="spinner-box">
+          <div class="spinner-track"></div>
+          <div class="spinner"></div>
+        </div>
+        <div id="loadedPercent">LOADING</div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -44,73 +54,73 @@ export default {
       window.map = map;
       // console.log(window.renderer)
 
-      let customLayer = {
-        id: 'Mapbox-Three-Dubble',
-        type: 'custom',
-        renderingMode: '3d',
-        onAdd: function(map, gl) {
-          //用mapbox-gl里的添加Webgl方法添加Threejs创建的3D模型
-          window.renderer = new THREE.WebGLRenderer({
-              canvas: map.getCanvas(),
-              context: gl,
-              antialias: true, //抗锯齿开启
-              preserveDrawingBuffer: true //开启预渲染缓存
-          });
-          //场景自动刷新
-          window.renderer.autoClear = false;
-          window.renderer.setPixelRatio(window.devicePixelRatio);
-          window.renderer.setSize( window.innerWidth, window.innerHeight );
-          window.renderer.shadowMap.Enabled = true;
-          window.renderer.outputEncoding = THREE.LinearEncoding;
-          window.renderer.shadowMap.enabled = true;
-          window.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      // let customLayer = {
+      //   id: 'Mapbox-Three-Dubble',
+      //   type: 'custom',
+      //   renderingMode: '3d',
+      //   onAdd: function(map, gl) {
+      //     //用mapbox-gl里的添加Webgl方法添加Threejs创建的3D模型
+      //     window.renderer = new THREE.WebGLRenderer({
+      //         canvas: map.getCanvas(),
+      //         context: gl,
+      //         antialias: true, //抗锯齿开启
+      //         preserveDrawingBuffer: true //开启预渲染缓存
+      //     });
+      //     //场景自动刷新
+      //     window.renderer.autoClear = false;
+      //     window.renderer.setPixelRatio(window.devicePixelRatio);
+      //     window.renderer.setSize( window.innerWidth, window.innerHeight );
+      //     window.renderer.shadowMap.Enabled = true;
+      //     window.renderer.outputEncoding = THREE.LinearEncoding;
+      //     window.renderer.shadowMap.enabled = true;
+      //     window.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-          camera.position.set( 300, 100, 800 );
-          camera.lookAt(new THREE.Vector3(0, 0, 0));
+      //     camera.position.set( 300, 100, 800 );
+      //     camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-          const cameraPerspectiveHelper = new THREE.CameraHelper( camera );
-          worldScene.add( cameraPerspectiveHelper );
+      //     const cameraPerspectiveHelper = new THREE.CameraHelper( camera );
+      //     worldScene.add( cameraPerspectiveHelper );
 
-          const aspect = window.innerWidth / window.innerHeight
-          const cameraOrtho = new THREE.OrthographicCamera( 0.5 * frustumSize * aspect / - 2, 0.5 * frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 150, 1000 );
+      //     const aspect = window.innerWidth / window.innerHeight
+      //     const cameraOrtho = new THREE.OrthographicCamera( 0.5 * frustumSize * aspect / - 2, 0.5 * frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 150, 1000 );
 
-          const cameraOrthoHelper = new THREE.CameraHelper( cameraOrtho );
-          worldScene.add( cameraOrthoHelper );
+      //     const cameraOrthoHelper = new THREE.CameraHelper( cameraOrtho );
+      //     worldScene.add( cameraOrthoHelper );
 
-          worldScene.add(new THREE.AxesHelper(1000));
-          const gridHelper = new THREE.GridHelper(600, 160, new THREE.Color(0xf56c6c), new THREE.Color(0x409eff))
+      //     worldScene.add(new THREE.AxesHelper(1000));
+      //     const gridHelper = new THREE.GridHelper(600, 160, new THREE.Color(0xf56c6c), new THREE.Color(0x409eff))
 
-          // const gridHelper = new THREE.GridHelper( 10000, 80, 0xf56c6c, 0x409eff );
-          gridHelper.position.y = -5;
-          gridHelper.material.opacity = 0.65;
-          gridHelper.material.transparent = true;
-          worldScene.add( gridHelper );
-          self.GetGeoJson('./assets/streets.json');
+      //     // const gridHelper = new THREE.GridHelper( 10000, 80, 0xf56c6c, 0x409eff );
+      //     gridHelper.position.y = -5;
+      //     gridHelper.material.opacity = 0.65;
+      //     gridHelper.material.transparent = true;
+      //     worldScene.add( gridHelper );
+      //     self.GetGeoJson('./assets/streets.json');
 
-        },
-        render: function(gl, matrix) {
-          self.animate();
-          map.triggerRepaint();
-        }
-      }
+      //   },
+      //   render: function(gl, matrix) {
+      //     self.animate();
+      //     map.triggerRepaint();
+      //   }
+      // }
+      //
+      const progressBar = document.getElementById('progressBar');
+      map.on('sourcedata', function(){
+        const layers = map.getStyle().layers;
+        layers.map((layer) => {
+          if (layer.id.indexOf('-label') >= 0) {
+            map.removeLayer(layer.id);
+          }
+        })
+      });
       map.on('load', function(){
-        // map.addSource('maine', {
-        //   type: 'geojson',
-        //   data: './assets/streets.json'
-        // });
-        // map.addLayer({
-        //     'id': 'maine',
-        //     'type': 'fill',
-        //     'source': 'maine',
-        //     'layout': {},
-        //     'paint': {
-        //     'fill-color': '#088',
-        //     'fill-opacity': 0.8
-        //   }
-        // });
-        map.addLayer(customLayer);
-        console.log(window.renderer)
-      })
+        progressBar.style.opacity = 0;
+      });
+      map.on('render', function(){
+        setTimeout(() => {
+          progressBar.style.zIndex = -1;
+        }, 500);
+      });      
     },
     GetGeoJson(api) {
       let self = this;
@@ -222,11 +232,110 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 #mapView {
   width: 100%;
   height: 100%;
   overflow: hidden;
   background-color: #000;
+}
+
+.progress-bar {
+  display: flex;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  transition: opacity 0.5s ease;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(80, 80, 80, 1);
+
+  #loadedPercent {
+    color:#efefef;
+    padding: 5px;
+    font-size:10px;
+  }
+
+  .spinner-wrap {
+    .spinner-box {
+      position: relative;
+      margin: 0 auto 15px;
+      width: 56px;
+
+      .spinner-track {
+        height: 56px;
+        width: 56px;
+        border: 6px solid #424242;
+        border-radius: 50%;
+      }
+      .spinner {
+        position: absolute;
+        top: 0;
+        height: 56px;
+        width: 56px;
+        border-radius: 50%;
+        background: #ffffff;
+        background: -moz-linear-gradient(left, #ffffff 10%, rgba(255, 255, 255, 0) 42%);
+        background: -webkit-linear-gradient(left, #ffffff 10%, rgba(255, 255, 255, 0) 42%);
+        background: -o-linear-gradient(left, #ffffff 10%, rgba(255, 255, 255, 0) 42%);
+        background: -ms-linear-gradient(left, #ffffff 10%, rgba(255, 255, 255, 0) 42%);
+        background: linear-gradient(to right, #ffffff 10%, rgba(255, 255, 255, 0) 42%);
+        -webkit-animation: rotate 1.4s infinite linear;
+        animation: rotate 1.4s infinite linear;
+        -webkit-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        transform: translateZ(0);
+
+        &:before {
+          width: 50%;
+          height: 50%;
+          background: #ffffff;
+          border-radius: 100% 0 0 0;
+          position: absolute;
+          top: 0;
+          left: 0;
+          content: '';
+        }
+        &:after {
+          background: #505050;
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          content: '';
+          margin: auto;
+          position: absolute;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          right: 0;
+        }
+      }
+    }
+  }
+}
+
+@-webkit-keyframes rotate {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
 }
 </style>
