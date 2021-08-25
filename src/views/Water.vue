@@ -59,8 +59,8 @@ export default {
       infoExpand: false,
       uuid: null,
       models: [
-        { name: 'assets/models/water/dx03.fbx', position: { x: 0, y: 0, z: 0 } },
-        { name: 'assets/models/water/BF_neibu.fbx', position: { x: 0, y: 0, z: 0 } }
+        { name: 'assets/models/f/scene_texture.fbx', position: { x: 0, y: 0, z: 0 } },
+        // { name: 'assets/models/water/BF_neibu.fbx', position: { x: 0, y: 0, z: 0 } }
         // { name: 'assets/models/TET.glb', position: { x: 0, y: 0, z: 0 } }
       ],
       cams: [
@@ -138,7 +138,8 @@ export default {
       orbitControls.listenToKeyEvents( window );
 
       // lights
-      const directionalLight = new THREE.DirectionalLight(0xefefef);
+      const directionalLight = new THREE.DirectionalLight(0xffffff);
+      directionalLight.position.set( 50, 200, 50 );
       const hemisphereLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1 );
       const directionalLightHelper = new THREE.DirectionalLightHelper( directionalLight, 150, new THREE.Color(0xff0000) );
       const hemisphereLightHelper = new THREE.HemisphereLightHelper( hemisphereLight, 100, new THREE.Color(0x202020) );
@@ -155,7 +156,7 @@ export default {
       gridHelper.position.y = -5;
       gridHelper.material.opacity = 0.25;
       gridHelper.material.transparent = true;
-      // worldScene.add(helperGroup);
+      worldScene.add(helperGroup);
 
       const compass = new Compass({
         container: 'container',
@@ -532,13 +533,13 @@ export default {
               position: {x: child.position.x * scale, y: child.position.y * scale, z: child.position.z * scale},
               geometry: child.geometry,
             })
-            if (isLabel) {
-              child.material = MAT_METER_TEXTURE;
-            } else {
-              child.material = MAT_TUBE_TEXTURE;
-            }
+            // if (isLabel) {
+            //   child.material = MAT_METER_TEXTURE;
+            // } else {
+            //   child.material = MAT_TUBE_TEXTURE;
+            // }
           } else {
-            child.material = MAT_BUILDING_TEXTURE;
+            // child.material = MAT_BUILDING_TEXTURE;
             // child.material.visible = false;
           }
         });

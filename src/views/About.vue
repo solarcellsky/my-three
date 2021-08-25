@@ -1,5 +1,12 @@
 <template>
-  <div class="about" id="cesiumContainer"></div>
+  <div class="about" id="cesiumContainer">
+    <div style="font-size: 60px"><VueJsCounter start="1900" end="1999999" duration="5000" thousand="," decimal=","></VueJsCounter></div>
+    <div>
+      <child :user="user"></child>
+      <label for="user">parent：</label>
+      <input id="user" type="text" v-model="user.name">
+    </div>
+  </div>
 </template>
 <script>
 import * as echarts from 'echarts';
@@ -8,11 +15,22 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import mapboxgl from "mapbox-gl";
 import * as shapefile from "shapefile";
 import axios from 'axios'
+import VueJsCounter from 'vue-js-counter';
+import Child from './child.vue'
 
 const ENCODE_SCALE = 1e6;
 export default {
+  data () {
+    return {
+      user: { name: 'liuMang' }
+    }
+  },
+  components: {
+    VueJsCounter,
+    Child
+  },
   mounted() {
-    this.init();
+    // this.init();
     // console.log(mapboxgl)
     window.mapboxgl = mapboxgl;
     mapboxgl.accessToken = 'pk.eyJ1Ijoic29sYXJjZWxsc2t5IiwiYSI6ImNrbmFmOXVjdjExZ3oycnRhY3ZqNWJqNHcifQ.INN_v0VVzC2KNQVL-nvMLg';

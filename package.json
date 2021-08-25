@@ -23,6 +23,7 @@
     "video.js": "^7.13.3",
     "videojs-flash": "^2.2.1",
     "vue": "^3.0.0",
+    "vue-js-counter": "^1.0.3",
     "vue-router": "^4.0.0-0"
   },
   "devDependencies": {

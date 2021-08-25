@@ -45,11 +45,11 @@ const loader = new GLTFLoader();
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-const interactionManager = new InteractionManager(
-  renderer,
-  camera,
-  renderer.domElement
-);
+// const interactionManager = new InteractionManager(
+//   renderer,
+//   camera,
+//   renderer.domElement
+// );
 
 const loadingManager = new THREE.LoadingManager();
 const clock = new THREE.Clock();
@@ -154,7 +154,7 @@ export default {
 
       // controls
       orbitControls.listenToKeyEvents( window ); // optional
-      this.GetGeoJson('./assets/streets.json')
+      this.GetGeoJson('./assets/temp/streets.json')
 
       window.addEventListener( 'resize', this.onWindowResize, false );
     },
@@ -226,7 +226,7 @@ export default {
       requestAnimationFrame(this.animate);
       renderer.render(worldScene, camera);
       labelRenderer.render( worldScene, camera );
-      interactionManager.update();
+      // interactionManager.update();
       // worldScene.rotation.y += 0.002;
       stats.update();
       mixers.map((mixer) => {
@@ -250,7 +250,7 @@ export default {
             child.material.emissiveIntensity = 0.5;
           }
 
-          interactionManager.add(child);
+          // interactionManager.add(child);
           
           child.addEventListener('mouseover', (event) => {
             event.stopPropagation();
