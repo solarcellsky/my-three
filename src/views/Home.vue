@@ -1,27 +1,42 @@
 <template>
   <div class="home">
     <div>
-      <p><router-link to="/geojson">GeoJson</router-link></p>
-      <p><router-link to="/about">Cool</router-link></p>
-      <p><router-link to="/wire">Wire Frame</router-link></p>
-      <p><router-link to="/threemap">Three Map</router-link></p>
-      <p><router-link to="/cool">Cool</router-link></p>
-      <p><router-link to="/water">Water</router-link></p>
+      <template v-for="link in links" :key="link.name">
+        <p>
+          <router-link :to="link.path">{{ link.name }}</router-link>
+        </p>
+      </template>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: 'Home',
+  name: "Home",
+  setup(props, context) {
+    const links = [
+      { name: "GeoJson", path: "/geojson" },
+      { name: "Cool", path: "/about" },
+      { name: "Wire Frame", path: "/wire" },
+      { name: "Three Map", path: "/threemap" },
+      { name: "Three MapBox", path: "/threemapbox" },
+      { name: "Water", path: "/water" },
+      { name: "Shield", path: "/shield" },
+      { name: "Baby", path: "/baby" },
+    ];
+
+    return {
+      links,
+    };
+  },
 });
 </script>
 
 <style lang="scss">
 .home {
-  display:flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;

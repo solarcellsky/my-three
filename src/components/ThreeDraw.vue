@@ -154,7 +154,7 @@ export default {
 
       // controls
       orbitControls.listenToKeyEvents( window ); // optional
-      this.GetGeoJson('./assets/temp/streets.json')
+      this.GetGeoJson('./assets/temp/china.json')
 
       window.addEventListener( 'resize', this.onWindowResize, false );
     },

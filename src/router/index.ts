@@ -37,6 +37,14 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import(/* webpackChunkName: "about" */ '../views/Map.vue')
   },
   {
+    path: '/threemapbox',
+    name: 'Three MapBox',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/ThreeMapBox.vue')
+  },
+  {
     path: '/cool',
     name: 'Cool',
     // route level code-splitting
@@ -59,6 +67,14 @@ const routes: Array<RouteRecordRaw> = [
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: () => import(/* webpackChunkName: "about" */ '../views/Water.vue')
+  },
+  {
+    path: '/shield',
+    name: 'Shield',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/Shield.vue')
   }
 ]
 
