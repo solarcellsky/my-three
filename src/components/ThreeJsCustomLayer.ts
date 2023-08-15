@@ -165,7 +165,7 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
 
   private _updateMeshMaterials(obj: any) {
     if (obj.material && obj.material.map) {
-      obj.material.map.offset.y += 0.05;;
+      obj.material.map.offset.y += 0.01;;
     } else {
       return null
     }
