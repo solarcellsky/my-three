@@ -22,6 +22,7 @@ export default defineComponent({
       { name: "Wire Frame", path: "/wire" },
       { name: "Three Map", path: "/threemap" },
       { name: "Three MapBox", path: "/threemapbox" },
+      { name: "Three MapBox Old", path: "/threemapboxold" },
       { name: "Water", path: "/water" },
       { name: "Shield", path: "/shield" },
       { name: "Baby", path: "/baby" },

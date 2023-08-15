@@ -9,23 +9,13 @@ import { onMounted, onBeforeUnmount, ref } from "vue";
 // mapboxgl地图
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-// mapboxgl汉化
+
 // THREE
+import { ThreeJsCustomLayer } from "../components/ThreeJsCustomLayer.ts";
 import * as THREE from "three";
-// 加载器
-import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-// label标签
-import {
-  CSS2DObject,
-  CSS2DRenderer,
-} from "three/examples/jsm/renderers/CSS2DRenderer";
 
 let map, // 地图
-  renderer, //  WebGLRenderer渲染器
-  scene, // 场景
-  camera; // 相机
+  threeLayer;
 
 // 初始化生命周期
 onMounted(() => {
@@ -33,23 +23,22 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   cancelAnimationFrame(requestAnimationFrameIndex);
-  // 释放显存
-  renderer?.dispose();
-  scene = null;
+  // // 释放显存
   map = null;
+  threeLayer = null;
 });
 
 const basicMapbox = ref(null),
   start = {
-    center: [80, 80],
+    center: [110.396467, 35.907173],
     zoom: 1,
     pitch: 0,
     bearing: 0,
   },
   end = {
-    center: [118.72791630249077, 32.00910104313064],
-    zoom: 17,
-    bearing: 60, //目标方位角
+    center: [116.396467, 39.907173],
+    zoom: 13,
+    bearing: 30, //目标方位角
     pitch: 75,
   };
 
@@ -65,125 +54,93 @@ function init() {
     antialias: true, //抗锯齿，通过false关闭提升性能
   });
   map.addControl(new mapboxgl.NavigationControl(), "top-left");
-  // 添加threejs
-  addThree();
+
+  map.on("style.load", () => {
+    map.setFog({
+      color: "rgb(186, 210, 235)", // Lower atmosphere
+      "high-color": "rgb(36, 92, 223)", // Upper atmosphere
+      "horizon-blend": 0.02, // Atmosphere thickness (default 0.2 at low zooms)
+      "space-color": "rgb(11, 11, 25)", // Background color
+      "star-intensity": 0.6, // Background star brightness (default 0.35 at low zoooms )
+    });
+    map.flyTo({
+      ...end,
+      duration: 5000,
+      essential: true,
+    });
+
+    addThree(map);
+  });
 }
 
 // 添加threejs
-function addThree() {
-  // 确保模型在地图上正确地理参照的参数
-  const modelOrigin = [118.72791630249077, 32.00910104313064],
-    modelAltitude = 0,
-    modelRotate = [Math.PI / 2, 0, 0],
-    modelScale = 5.41843220338983e-8;
+function addThree(map) {
+  threeLayer = new ThreeJsCustomLayer();
 
-  // 用于在地图上定位、旋转和缩放三维模型的变换参数
-  const modelTransform = {
-    translateX: mapboxgl.MercatorCoordinate.fromLngLat(
-      modelOrigin,
-      modelAltitude
-    ).x,
-    translateY: mapboxgl.MercatorCoordinate.fromLngLat(
-      modelOrigin,
-      modelAltitude
-    ).y,
-    translateZ: mapboxgl.MercatorCoordinate.fromLngLat(
-      modelOrigin,
-      modelAltitude
-    ).z,
-    rotateX: modelRotate[0],
-    rotateY: modelRotate[1],
-    rotateZ: modelRotate[2],
-    /*由于我们的3D模型是以真实世界的米为单位的，因此需要进行比例变换
-     *应用，因为CustomLayerInterface需要墨卡托坐标中的单位。
-     */
-    // scale: mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude).meterInMercatorCoordinateUnits(),
-    scale: modelScale,
-  };
-
-  // 根据CustomLayerInterface为三维模型配置自定义层
-  const customLayer = {
-    id: "3dmodel",
-    type: "custom",
-    renderingMode: "3d",
-    onAdd: function(map, gl) {
-      // 场景
-      scene = new THREE.Scene();
-      scene.fog = new THREE.Fog("#ffffff", 20, 500);
-      // scene.add(Object3D);
-      // 相机
-      camera = new THREE.PerspectiveCamera(
-        45,
-        basicMapbox.value.offsetWidth / basicMapbox.value.offsetHeight,
-        1,
-        2000
-      );
-
-      // 使用Mapbox GL JS地图画布,添加 `THREE.WebGLRenderer`
-      renderer = new THREE.WebGLRenderer({
-        canvas: map.getCanvas(),
-        context: gl,
-        alpha: true,
-        antialias: true,
-      });
-      // renderer.shadowMap.enabled = true;
-      // 定义渲染器是否在渲染每一帧之前自动清除其输出。
-      renderer.autoClear = false;
-      // 自然光
-      scene.add(new THREE.AmbientLight("#ffffff", 1));
-      // 加载器
-      // loaderFn();
-    },
-    render: function(gl, matrix) {
-      const rotationX = new THREE.Matrix4().makeRotationAxis(
-        new THREE.Vector3(1, 0, 0),
-        modelTransform.rotateX
-      );
-      const rotationY = new THREE.Matrix4().makeRotationAxis(
-        new THREE.Vector3(0, 1, 0),
-        modelTransform.rotateY
-      );
-      const rotationZ = new THREE.Matrix4().makeRotationAxis(
-        new THREE.Vector3(0, 0, 1),
-        modelTransform.rotateZ
-      );
-
-      const m = new THREE.Matrix4().fromArray(matrix);
-      const l = new THREE.Matrix4()
-        .makeTranslation(
-          modelTransform.translateX,
-          modelTransform.translateY,
-          modelTransform.translateZ
-        )
-        .scale(
-          new THREE.Vector3(
-            modelTransform.scale,
-            -modelTransform.scale,
-            modelTransform.scale
-          )
-        )
-        .multiply(rotationX)
-        .multiply(rotationY)
-        .multiply(rotationZ);
-
-      // camera.projectionMatrix.elements = matrix;
-      // camera.projectionMatrix = m.multiply(l);
-      renderer?.render(scene, camera);
-
-      // 必须调用该函数更新视图
-      map?.triggerRepaint();
-    },
-  };
-
-  map.on("style.load", function() {
-    map.setFog({});
-    map.flyTo({
-      ...end,
-      duration: 10000,
-      essential: true,
+  const textureLoader = new THREE.TextureLoader();
+  map.addLayer(threeLayer);
+  textureLoader.load("./assets/images/m.png", (texture) => {
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping; // 纹理垂直方向的平铺方式
+    texture.repeat.set(1, 1); // 重复产生N个相同贴图 产生N行
+    // 用代码创建一个朝下的半圆几何体数据，具体的参数可以查看Three.js的官方文档
+    const geometry = new THREE.SphereGeometry(
+      1000,
+      360,
+      100,
+      0,
+      Math.PI * 2,
+      0,
+      Math.PI / 2
+    );
+    // 创建基础材质
+    const sphere_material = new THREE.MeshBasicMaterial({
+      map: texture, // 图片。可以没有那就是纯色
+      // color: 0x0000ff, // 颜色。如果设置了会叠加上面图片的颜色
+      transparent: true, // 是否开启透明度
+      opacity: 0.4, // 设置透明度值,只有开启了透明度这个值才好用
+      side: THREE.DoubleSide, // 正反面渲染
+      minFilter: THREE.LinearFilter,
     });
-    map.addLayer(customLayer);
+    // 创建实体
+    const sphere = new THREE.Mesh(geometry, sphere_material);
+
+    const cube_geometry = new THREE.SphereGeometry(
+      100,
+      360,
+      100,
+      0,
+      Math.PI * 2,
+      0,
+      Math.PI / 2
+    );
+    const cube_material = new THREE.MeshBasicMaterial({
+      map: texture,
+      color: 0xff0000,
+      transparent: true, // 是否开启透明度
+      opacity: 0.6,
+      side: THREE.DoubleSide, // 正反面渲染
+      minFilter: THREE.LinearFilter,
+    });
+    const cube = new THREE.Mesh(cube_geometry, cube_material);
+    threeLayer.addGeographicObject(sphere);
+    // threeLayer.addGeographicObject(cube);
   });
+}
+
+/**
+ * 经纬度转xyz
+ * @param longitude 经度
+ * @param latitude 纬度
+ * @param radius 半径
+ */
+function lglt2xyz(longitude, latitude, radius) {
+  var lg = THREE.Math.degToRad(longitude),
+    lt = THREE.Math.degToRad(latitude);
+  var y = radius * Math.sin(lt);
+  var temp = radius * Math.cos(lt);
+  var x = temp * Math.sin(lg);
+  var z = temp * Math.cos(lg);
+  return { xc: x, yc: y, zc: z };
 }
 </script>
 
