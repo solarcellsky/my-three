@@ -117,6 +117,7 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
 
     this._scene.traverse((object: any) => {
       if (object.isMesh) this._updateMeshMaterials(object);
+      // console.log('object: ', object.position);
     });
 
     this._map.triggerRepaint();

@@ -105,7 +105,7 @@ function addThree(map) {
     const sphere = new THREE.Mesh(geometry, sphere_material);
 
     const cube_geometry = new THREE.SphereGeometry(
-      100,
+      10000,
       360,
       100,
       0,
@@ -122,25 +122,29 @@ function addThree(map) {
       minFilter: THREE.LinearFilter,
     });
     const cube = new THREE.Mesh(cube_geometry, cube_material);
+    const xyz = getMercator([116.426403, 39.913524]);
+    // sphere.position.set(-xyz.x, -xyz.y, xyz.z);
+    console.log("sphere.position: ", sphere.position);
     threeLayer.addGeographicObject(sphere);
     // threeLayer.addGeographicObject(cube);
   });
 }
 
 /**
- * 经纬度转xyz
- * @param longitude 经度
- * @param latitude 纬度
- * @param radius 半径
+ * 经纬度转墨卡托xyz
+ * @param lngLat 经纬度
  */
-function lglt2xyz(longitude, latitude, radius) {
-  var lg = THREE.Math.degToRad(longitude),
-    lt = THREE.Math.degToRad(latitude);
-  var y = radius * Math.sin(lt);
-  var temp = radius * Math.cos(lt);
-  var x = temp * Math.sin(lg);
-  var z = temp * Math.cos(lg);
-  return { xc: x, yc: y, zc: z };
+function getMercator(lngLat) {
+  const mercator = {};
+  // 地球半径(米)
+  const earthRad = 6378137.0;
+  mercator.x = ((lngLat[0] * Math.PI) / 180) * earthRad;
+  const local_array = (lngLat[1] * Math.PI) / 180;
+  mercator.y =
+    (earthRad / 2) *
+    Math.log((1.0 + Math.sin(local_array)) / (1.0 - Math.sin(local_array)));
+  mercator.z = 0;
+  return mercator;
 }
 </script>
 
