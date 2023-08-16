@@ -252,10 +252,10 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
     lightGroup.add(directionalLight, hemisphereLight);
     this._scene.add(lightGroup);
 
-    const axesHelper = new AxesHelper(10000000);
-    const gridHelper = new GridHelper(666, 160, new Color(0x00ffff), new Color(0x0000ff));
-    const directionalLightHelper = new DirectionalLightHelper(directionalLight, 150, new Color(0xff0000));
-    const hemisphereLightHelper = new HemisphereLightHelper(hemisphereLight, 100, new Color(0x202020));
+    const axesHelper = new AxesHelper(100000);
+    const gridHelper = new GridHelper(10000, 160, new Color(0x00ffff), new Color(0x0000ff));
+    const directionalLightHelper = new DirectionalLightHelper(directionalLight, 1500, new Color(0xff0000));
+    const hemisphereLightHelper = new HemisphereLightHelper(hemisphereLight, 1000, new Color(0x202020));
     const helperGroup = new Group();
     helperGroup.add(axesHelper, gridHelper, directionalLightHelper, hemisphereLightHelper);
 

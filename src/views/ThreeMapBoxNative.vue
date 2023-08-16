@@ -73,6 +73,15 @@ function init() {
   });
   map.addControl(new mapboxgl.NavigationControl(), "top-right");
 
+  map.on("sourcedata", function() {
+    const layers = map.getStyle().layers;
+    layers.map((layer) => {
+      if (layer.id.indexOf("-label") >= 0) {
+        map.removeLayer(layer.id);
+      }
+    });
+  });
+
   map.on("style.load", () => {
     map.setFog({
       color: "rgb(186, 210, 235)", // Lower atmosphere
@@ -93,7 +102,7 @@ function init() {
 
 // 添加threejs
 function addThree(map) {
-  threeLayer = new ThreeJsCustomLayer(null, false);
+  threeLayer = new ThreeJsCustomLayer(null, true);
 
   const textureLoader = new THREE.TextureLoader();
   map.addLayer(threeLayer);
@@ -121,7 +130,6 @@ function addThree(map) {
     });
     // 创建实体
     const sphere = new THREE.Mesh(geometry, sphere_material);
-    console.log("sphere: ", sphere);
 
     const cube_geometry = new THREE.SphereBufferGeometry(
       888,
