@@ -10,10 +10,10 @@ import { onMounted, onBeforeUnmount, ref } from "vue";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-import { Threebox } from "threebox-plugin";
 // THREE
-import { ThreeBoxCustomLayer } from "../components/ThreeBoxCustomLayer.ts";
+import { ThreeJsCustomLayer } from "../components/ThreeJsCustomLayer.ts";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 let map, // 地图
   threeLayer;
@@ -38,9 +38,9 @@ const basicMapbox = ref(null),
   },
   end = {
     center: [116.396467, 39.907173],
-    zoom: 13,
-    bearing: 30, //目标方位角
-    pitch: 75,
+    zoom: 14,
+    bearing: 20, //目标方位角
+    pitch: 60,
   };
 
 // 初始化函数
@@ -55,16 +55,6 @@ function init() {
     antialias: true, //抗锯齿，通过false关闭提升性能
   });
   map.addControl(new mapboxgl.NavigationControl(), "top-right");
-
-  window.tb = new Threebox(
-    map,
-
-    map.getCanvas().getContext("webgl"),
-    {
-      defaultLights: true,
-      enableSelectingObjects: true,
-    }
-  );
 
   map.on("style.load", () => {
     map.setFog({
@@ -86,52 +76,82 @@ function init() {
 
 // 添加threejs
 function addThree(map) {
-  threeLayer = new ThreeBoxCustomLayer(null, true, map, tb);
-  map.addLayer(threeLayer);
+  threeLayer = new ThreeJsCustomLayer(null, true);
 
   const textureLoader = new THREE.TextureLoader();
-
-  textureLoader.load("./assets/images/m.png", (texture) => {
+  map.addLayer(threeLayer);
+  textureLoader.load("./assets/images/r.png", (texture) => {
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping; // 纹理垂直方向的平铺方式
     texture.repeat.set(1, 1); // 重复产生N个相同贴图 产生N行
-
+    // 用代码创建一个朝下的半圆几何体数据，具体的参数可以查看Three.js的官方文档
+    const geometry = new THREE.SphereBufferGeometry(
+      600,
+      360,
+      90,
+      0,
+      Math.PI * 2,
+      0,
+      Math.PI / 2
+    );
     // 创建基础材质
     const sphere_material = new THREE.MeshBasicMaterial({
       map: texture, // 图片。可以没有那就是纯色
+      // color: 0xa4ffdc, // 颜色。如果设置了会叠加上面图片的颜色
       transparent: true, // 是否开启透明度
+      opacity: 0.618, // 设置透明度值,只有开启了透明度这个值才好用
       side: THREE.DoubleSide, // 正反面渲染
       minFilter: THREE.LinearFilter,
     });
     // 创建实体
-    const sphere = threeLayer.generateThreeBoxGeometryObject("sphere", {
-      radius: 360,
-      sides: 120,
-      opacity: 0.4,
-      units: "meters",
-      material: sphere_material,
-      origin: [116.38023, 39.913302, -Math.PI * 2],
-    });
+    const sphere = new THREE.Mesh(geometry, sphere_material);
+    console.log("sphere: ", sphere);
 
-    threeLayer.addObject2Scene(sphere);
-
+    const cube_geometry = new THREE.SphereBufferGeometry(
+      888,
+      360,
+      90,
+      0,
+      Math.PI * 2,
+      0,
+      Math.PI / 2
+    );
     const cube_material = new THREE.MeshBasicMaterial({
       map: texture,
       color: 0xff0000,
       transparent: true, // 是否开启透明度
+      opacity: 0.6,
       side: THREE.DoubleSide, // 正反面渲染
       minFilter: THREE.LinearFilter,
     });
-    const cube = threeLayer.generateThreeBoxGeometryObject("sphere", {
-      radius: 360,
-      sides: 120,
-      opacity: 0.4,
-      units: "meters",
-      material: cube_material,
-      origin: [116.39216, 39.916014, -Math.PI * 2],
-    });
-
-    threeLayer.addObject2Scene(cube);
+    const cube = new THREE.Mesh(cube_geometry, cube_material);
+    // const xyz = getMercator([116.426403, 39.913524]);
+    threeLayer.addGeographicObject2Scene(sphere);
+    threeLayer.addGeographicObject2Scene(cube);
   });
+
+  const modelLoader = new GLTFLoader();
+  modelLoader.load("./assets/models/elephant.glb", (gltf) => {
+    const model = gltf.scene;
+    model.scale.setScalar(500);
+    threeLayer.addObject3D2Scene(model, [116.426403, 39.913524]);
+  });
+}
+
+/**
+ * 经纬度转墨卡托xyz
+ * @param lngLat 经纬度
+ */
+function getMercator(lngLat) {
+  const mercator = {};
+  // 地球半径(米)
+  const earthRad = 6378137.0;
+  mercator.x = ((lngLat[0] * Math.PI) / 180) * earthRad;
+  const local_array = (lngLat[1] * Math.PI) / 180;
+  mercator.y =
+    (earthRad / 2) *
+    Math.log((1.0 + Math.sin(local_array)) / (1.0 - Math.sin(local_array)));
+  mercator.z = 0;
+  return mercator;
 }
 </script>
 

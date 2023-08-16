@@ -38,6 +38,9 @@ dependencies:
   three:
     specifier: ^0.129.0
     version: 0.129.0
+  threebox-plugin:
+    specifier: ^2.2.7
+    version: 2.2.7
   tween.js:
     specifier: ^16.6.0
     version: 16.6.0
@@ -86,13 +89,13 @@ devDependencies:
     specifier: ^9.0.2
     version: 9.2.2
   node-sass:
-    specifier: ^9.0.0
+    specifier: 9.0.0
     version: 9.0.0
   sass:
     specifier: ^1.65.1
     version: 1.65.1
   sass-loader:
-    specifier: ^7.3.1
+    specifier: 7.3.1
     version: 7.3.1(webpack@4.46.0)
   typescript:
     specifier: ~4.1.5
@@ -9994,6 +9997,10 @@ packages:
 
   /three@0.129.0:
     resolution: {integrity: sha512-wiWio1yVRg2Oj6WEWsTHQo5eSzYpEwSBtPSi3OofNpvFbf26HFfb9kw4FZJNjII4qxzp0b1xLB11+tKkBGB1ZA==}
+    dev: false
+
+  /threebox-plugin@2.2.7:
+    resolution: {integrity: sha512-H87Nm4w1PfisHPHzavTGXlwIoJpx2+QU57GooQYIhF51lsg+U5A0KGf3Jrv/HWsLCGOwV2BTnv7UTLfpO1EccQ==}
     dev: false
 
   /through2@2.0.5:
