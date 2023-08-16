@@ -43,6 +43,20 @@ const basicMapbox = ref(null),
     pitch: 60,
   };
 
+const blankMapStyle = {
+  version: 8,
+  sources: {},
+  layers: [
+    {
+      id: "background",
+      type: "background",
+      paint: {
+        "background-color": "rgba(255,255,255,0)",
+      },
+    },
+  ],
+};
+
 // 初始化函数
 function init() {
   mapboxgl.accessToken =
@@ -53,6 +67,9 @@ function init() {
     ...start,
     projection: "globe", // 为 3D 地球
     antialias: true, //抗锯齿，通过false关闭提升性能
+    scrollZoom: false,
+    doubleClickZoom: false,
+    keyboard: false,
   });
   map.addControl(new mapboxgl.NavigationControl(), "top-right");
 
@@ -76,7 +93,7 @@ function init() {
 
 // 添加threejs
 function addThree(map) {
-  threeLayer = new ThreeJsCustomLayer(null, true);
+  threeLayer = new ThreeJsCustomLayer(null, false);
 
   const textureLoader = new THREE.TextureLoader();
   map.addLayer(threeLayer);
