@@ -8,6 +8,7 @@ import {
   DirectionalLight,
   HemisphereLight,
   AxesHelper,
+  Raycaster,
   DirectionalLightHelper,
   HemisphereLightHelper,
   Group,
@@ -16,7 +17,11 @@ import {
   Scene,
   Color,
   Vector3,
-  WebGLRenderer
+  Vector2,
+  WebGLRenderer,
+  MeshBasicMaterial,
+  DoubleSide,
+  LinearFilter
 } from 'three';
 
 let stats: {
@@ -68,6 +73,7 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
     this._renderer.shadowMap.enabled = true;
 
     this._setupLights();
+    this._showInfo('')
   }
 
   public render(gl: WebGLRenderingContext, matrix: number[]) {
@@ -157,43 +163,49 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
    * @param lngLat Coordinates at which to place the object
    * @param altitude altitude at which to place the object
    */
-  public addObject3D2Scene(object: Object3D, lngLat: LngLatLike, altitude = 0) {
+  public addObject3D2Scene(object: Object3D, lngLat: LngLatLike, eventName: string) {
     if (!this._center) throw new Error("Custom Layer has not been added to the map yet.");
     const { x, y, z } = this._center;
-    const coord = MercatorCoordinate.fromLngLat(lngLat, altitude) as Required<MercatorCoordinate>;
-    const scale = coord.meterInMercatorCoordinateUnits();
-    const matrix = new Matrix4()
-      .makeTranslation(coord.x - x, coord.y - y, coord.z - z)
-      .scale(new Vector3(scale, -scale, scale));
+    if (lngLat) {
+      const coord = MercatorCoordinate.fromLngLat(lngLat, 0) as Required<MercatorCoordinate>;
+      const scale = coord.meterInMercatorCoordinateUnits();
+      const matrix = new Matrix4()
+        .makeTranslation(coord.x - x, coord.y - y, coord.z - z)
+        .scale(new Vector3(scale, -scale, scale));
 
-    // object.applyMatrix4(matrix);
-    console.log('object: ', object);
+      object.applyMatrix4(matrix);
+    }
     this._scene.add(object);
+
+    if (eventName) window.addEventListener(eventName, (e) => this._onDocumentMouseDown(e, this._scene.children, this._renderer), false);
   }
 
   /**
    * @param object ThreeJs object, with coordinates in meters
-   * @param lnglat Coordinates at which to place the object
+   * @param lngLat Coordinates at which to place the object
    * @param altitude altitude at which to place the object
    */
-  public addGeographicObject2Scene(object: Mesh, lnglat: LngLatLike) {
+  public addGeographicObject2Scene(object: any, lngLat: LngLatLike, eventName: string) {
+
     if (!this._center) throw new Error("Custom Layer has not been added to the map yet.");
 
-    const _coord_obj_ = this._makeMercatorCoordinate(lnglat);
-    const _coord_map_ = this._makeMercatorCoordinate(this._mapCenter);
+    if (lngLat) {
+      const _coord_obj_ = this._makeMercatorCoordinate(lngLat) || { x: 0, y: 0, z: 0 };
+      const _coord_map_ = this._makeMercatorCoordinate(this._mapCenter) || { x: 0, y: 0, z: 0 };
+      const matrix = new Matrix4()
+        .makeTranslation(_coord_obj_.x - _coord_map_.x, _coord_obj_.y - _coord_map_.y, 0)
+      object.applyMatrix4(matrix);
 
-    const matrix = new Matrix4()
-      .makeTranslation(_coord_obj_.x - _coord_map_.x, _coord_obj_.y - _coord_map_.y, 0)
-    // object.applyMatrix4(matrix);
-    console.log('object: ', object);
+      // console.log(' _coord_map_, _coord_obj_: ', _coord_map_, _coord_obj_);
+      // console.log('_coord_map_.x - _coord_obj_.x, _coord_map_.y - _coord_obj_.y, 0: ', [_coord_obj_.x - _coord_map_.x, _coord_obj_.y - _coord_map_.y, 0]);
 
-    // console.log(' _coord_map_, _coord_obj_: ', _coord_map_, _coord_obj_);
-    // console.log('_coord_map_.x - _coord_obj_.x, _coord_map_.y - _coord_obj_.y, 0: ', [_coord_obj_.x - _coord_map_.x, _coord_obj_.y - _coord_map_.y, 0]);
-
-    // object.position.set(_coord_obj_.x - _coord_map_.x, _coord_obj_.y - _coord_map_.y, 0);
+      // object.position.set(_coord_obj_.x - _coord_map_.x, _coord_obj_.y - _coord_map_.y, 0);
+    }
 
     this._updateMeshMaterials(object)
     this._scene.add(object);
+
+    if (eventName) window.addEventListener(eventName, (e) => this._onDocumentMouseDown(e, this._scene.children, this._renderer), false);
   }
 
   public enable() {
@@ -210,7 +222,7 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
 
   private _updateMeshMaterials(obj: any) {
     if (obj.material && obj.material.map) {
-      obj.material.map.offset.y += 0.01;;
+      obj.material.map.offset.y += 0.001;;
     } else {
       return null
     }
@@ -221,6 +233,7 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
    * @param lngLat 经纬度
    */
   private _makeMercatorCoordinate(lngLat: any = [0, 0]) {
+    if (!lngLat) return;
     const mercator = { x: 0, y: 0, z: 0 };
     // 地球半径(米)
     const earthRad = 63781370;
@@ -260,5 +273,38 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
     helperGroup.add(axesHelper, gridHelper, directionalLightHelper, hemisphereLightHelper);
 
     if (this.debug) this._scene.add(helperGroup);
+  }
+
+  private _showInfo(content: string): void {
+    const existedDom = document.getElementById('sceneInfo');
+    if (existedDom) {
+      existedDom.innerText = content ? content : '点击界面显示相关信息'
+    } else {
+      const dom = document.createElement('div');
+      dom.setAttribute('style', 'position: fixed;left: 0;bottom: 0;width: 100%;z-index: 1;background-color: #ffffff;padding: 10px 20px');
+      dom.setAttribute('id', 'sceneInfo');
+      const target = document.getElementsByTagName('body')[0];
+      target.appendChild(dom);
+
+      dom.innerText = content ? content : '点击界面显示相关信息';
+    };
+  }
+
+  private _onDocumentMouseDown(event: any, objects: any[], renderer: any): void {
+    event.preventDefault();
+    const raycaster = new Raycaster();
+    const mouse = new Vector2();
+
+    mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, this._camera);
+
+    const intersects = raycaster.intersectObjects(objects);
+
+    if (intersects.length > 0) {
+      const _object = intersects[0].object;
+      console.log('_object: ', _object);
+      this._showInfo(_object.name);
+    }
   }
 }

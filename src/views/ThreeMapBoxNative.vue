@@ -73,7 +73,7 @@ function init() {
   });
   map.addControl(new mapboxgl.NavigationControl(), "top-right");
 
-  map.on("sourcedata", function() {
+  map.on("sourcedata", function () {
     const layers = map.getStyle().layers;
     layers.map((layer) => {
       if (layer.id.indexOf("-label") >= 0) {
@@ -130,6 +130,7 @@ function addThree(map) {
     });
     // 创建实体
     const sphere = new THREE.Mesh(geometry, sphere_material);
+    sphere.name = "设置透明度值,只有开启了透明度这个值才好用";
 
     const cube_geometry = new THREE.SphereBufferGeometry(
       888,
@@ -149,16 +150,17 @@ function addThree(map) {
       minFilter: THREE.LinearFilter,
     });
     const cube = new THREE.Mesh(cube_geometry, cube_material);
+    sphere.name = "颜色。如果设置了会叠加上面图片的颜色";
     // const xyz = getMercator([116.426403, 39.913524]);
-    threeLayer.addGeographicObject2Scene(sphere);
-    threeLayer.addGeographicObject2Scene(cube);
+    threeLayer.addGeographicObject2Scene(sphere, null, "click");
+    threeLayer.addGeographicObject2Scene(cube, null, "click");
   });
 
   const modelLoader = new GLTFLoader();
-  modelLoader.load("./assets/models/elephant.glb", (gltf) => {
-    const model = gltf.scene;
-    model.scale.setScalar(500);
-    threeLayer.addObject3D2Scene(model, [116.426403, 39.913524]);
+  modelLoader.load("./assets/models/elephant.glb", (result) => {
+    const model = result.scene;
+    model.scale.setScalar(100);
+    threeLayer.addObject3D2Scene(model, [116.426403, 39.913524], "click");
   });
 }
 
