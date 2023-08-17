@@ -1,5 +1,5 @@
 import type { Map, CustomLayerInterface, LngLatLike } from 'mapbox-gl';
-import type { Object3D, Mesh } from 'three';
+import type { Event, Object3D } from 'three';
 
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { MercatorCoordinate } from 'mapbox-gl';
@@ -12,6 +12,7 @@ import {
   DirectionalLightHelper,
   HemisphereLightHelper,
   Group,
+  Mesh,
   GridHelper,
   Matrix4,
   Scene,
@@ -19,10 +20,15 @@ import {
   Vector3,
   Vector2,
   WebGLRenderer,
-  MeshBasicMaterial,
-  DoubleSide,
-  LinearFilter
+  Spherical,
+  BoxGeometry,
+  BoxHelper,
+  MeshBasicMaterial
 } from 'three';
+
+
+// 地球(赤道)半径(米)
+const earthRad = 6378137;
 
 let stats: {
   dom: any; update: () => void;
@@ -46,20 +52,21 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
   private _map?: Map;
   private _center?: Required<MercatorCoordinate>;
   private _renderer?: WebGLRenderer;
-  private _mapCenter?: LngLatLike;
+  private _origin?: any[];
 
-  public constructor(id: string = 'threeLayer', debug: boolean = false) {
-    this.id = id;
+  public constructor(id: string = 'threeLayer', origin: any = [0, 0], debug: boolean = false) {
+    this.id = id
     this.debug = debug
+    this._origin = origin
   }
 
   public onAdd(map: Map, gl: WebGLRenderingContext) {
+    console.log('this._origin: ', this._origin);
     stats = new Stats();
     if (this.debug) map.getContainer().appendChild(stats.dom) && animate();
 
     this._map = map;
     this._center = MercatorCoordinate.fromLngLat(map.getCenter(), 0) as Required<MercatorCoordinate>;
-    this._mapCenter = [map.getCenter().lng, map.getCenter().lat];
     this._cameraTransform = this._cameraTransform.makeTranslation(this._center.x, this._center.y, this._center.z);
 
     this._renderer = new WebGLRenderer({
@@ -84,13 +91,10 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
 
     if (!this._enabled) return;
 
-    // const mapInstance = this._map;
-    const lngLat: LngLatLike = [116.396467, 39.907173];
     // 确保模型在地图上正确地理参照的参数
-    const modelOrigin: LngLatLike = lngLat,
+    const modelOrigin: any = this._origin,
       modelAltitude = 0,
-      modelRotate = [Math.PI / 2, 0, 0],
-      modelScale = 5.41843220338983e-8;
+      modelRotate = [Math.PI / 2, 0, 0];
 
     // 用于在地图上定位、旋转和缩放三维模型的变换参数
     const modelTransform = {
@@ -112,8 +116,7 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
       /*由于我们的3D模型是以真实世界的米为单位的，因此需要进行比例变换
        *应用，因为CustomLayerInterface需要墨卡托坐标中的单位。
        */
-      scale: MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude).meterInMercatorCoordinateUnits(),
-      // scale: modelScale,
+      scale: MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude).meterInMercatorCoordinateUnits()
     };
 
     const rotationX = new Matrix4().makeRotationAxis(
@@ -163,19 +166,16 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
    * @param lngLat Coordinates at which to place the object
    * @param altitude altitude at which to place the object
    */
-  public addObject3D2Scene(object: Object3D, lngLat: LngLatLike, eventName: string) {
+  public addObject3D2Scene(object: Object3D | any, lngLat: LngLatLike, eventName: string) {
     if (!this._center) throw new Error("Custom Layer has not been added to the map yet.");
-    const { x, y, z } = this._center;
     if (lngLat) {
-      const coord = MercatorCoordinate.fromLngLat(lngLat, 0) as Required<MercatorCoordinate>;
-      const scale = coord.meterInMercatorCoordinateUnits();
-      const matrix = new Matrix4()
-        .makeTranslation(coord.x - x, coord.y - y, coord.z - z)
-        .scale(new Vector3(scale, -scale, scale));
+      const coord = this._calculateRelativeCoordinate(this._origin, lngLat) || { x: 0, y: 0, z: 0 };
+      const matrix = new Matrix4().makeTranslation(coord.x, coord.y, 0);
 
       object.applyMatrix4(matrix);
     }
     this._scene.add(object);
+    this._addBoxHelper(object, this._scene);
 
     if (eventName) window.addEventListener(eventName, (e) => this._onDocumentMouseDown(e, this._scene.children, this._renderer), false);
   }
@@ -190,20 +190,16 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
     if (!this._center) throw new Error("Custom Layer has not been added to the map yet.");
 
     if (lngLat) {
-      const _coord_obj_ = this._makeMercatorCoordinate(lngLat) || { x: 0, y: 0, z: 0 };
-      const _coord_map_ = this._makeMercatorCoordinate(this._mapCenter) || { x: 0, y: 0, z: 0 };
+      const coord = this._calculateRelativeCoordinate(this._origin, lngLat) || { x: 0, y: 0, z: 0 };
       const matrix = new Matrix4()
-        .makeTranslation(_coord_obj_.x - _coord_map_.x, _coord_obj_.y - _coord_map_.y, 0)
+        .makeTranslation(coord.x, coord.y, 0)
       object.applyMatrix4(matrix);
-
-      // console.log(' _coord_map_, _coord_obj_: ', _coord_map_, _coord_obj_);
-      // console.log('_coord_map_.x - _coord_obj_.x, _coord_map_.y - _coord_obj_.y, 0: ', [_coord_obj_.x - _coord_map_.x, _coord_obj_.y - _coord_map_.y, 0]);
-
-      // object.position.set(_coord_obj_.x - _coord_map_.x, _coord_obj_.y - _coord_map_.y, 0);
     }
 
     this._updateMeshMaterials(object)
+
     this._scene.add(object);
+    this._addBoxHelper(object, this._scene);
 
     if (eventName) window.addEventListener(eventName, (e) => this._onDocumentMouseDown(e, this._scene.children, this._renderer), false);
   }
@@ -220,6 +216,13 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
     this._scene.remove(obj);
   }
 
+  private _addBoxHelper(obj: any, scene: any) {
+    if (this.debug) {
+      const box = new BoxHelper(obj);
+      scene.add(box);
+    }
+  }
+
   private _updateMeshMaterials(obj: any) {
     if (obj.material && obj.material.map) {
       obj.material.map.offset.y += 0.001;;
@@ -232,18 +235,42 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
    * 经纬度转墨卡托xyz
    * @param lngLat 经纬度
    */
-  private _makeMercatorCoordinate(lngLat: any = [0, 0]) {
-    if (!lngLat) return;
+  private _lngLat2MercatorCoordinate(lngLat: any = [0, 0]) {
+    if (!lngLat) return { x: 0, y: 0, z: 0 };
     const mercator = { x: 0, y: 0, z: 0 };
-    // 地球半径(米)
-    const earthRad = 63781370;
     mercator.x = ((lngLat[0] * Math.PI) / 180) * earthRad;
     const local_array = (lngLat[1] * Math.PI) / 180;
     mercator.y =
       (earthRad / 2) *
       Math.log((1.0 + Math.sin(local_array)) / (1.0 - Math.sin(local_array)));
     mercator.z = 0;
+
     return mercator;
+  }
+
+  /**
+   * 经纬度转ThreeJS坐标
+   * @param lngLat 经纬度
+   */
+  private _lngLat2ThreeJsCoordinate(lngLat: any = [0, 0]) {
+    let spherical = new Spherical
+    spherical.radius = earthRad;
+    const lng = lngLat[0]
+    const lat = lngLat[1]
+    const theta = (lng + 90) * (Math.PI / 180)
+    const phi = (90 - lat) * (Math.PI / 180)
+    spherical.phi = phi; // phi是方位面（水平面）内的角度，范围0~360度
+    spherical.theta = theta; // theta是俯仰面（竖直面）内的角度，范围0~180度
+    let position = new Vector3()
+    position.setFromSpherical(spherical)
+    position.z = 0
+    return position
+  }
+
+  private _calculateRelativeCoordinate(origin: any = [0, 0], end: any = [0, 0]) {
+    const _origin = this._lngLat2MercatorCoordinate(origin)
+    const _end = this._lngLat2MercatorCoordinate(end)
+    return { x: _end.x - _origin.x, y: _end.y - _origin.y, z: 0 }
   }
 
   private _setupLights(): void {
@@ -265,12 +292,24 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
     lightGroup.add(directionalLight, hemisphereLight);
     this._scene.add(lightGroup);
 
+    // ThreeJS 中采用的是右手坐标系
+    // 红线是X轴，绿线是Y轴，蓝线是Z轴
     const axesHelper = new AxesHelper(100000);
-    const gridHelper = new GridHelper(10000, 160, new Color(0x00ffff), new Color(0x0000ff));
-    const directionalLightHelper = new DirectionalLightHelper(directionalLight, 1500, new Color(0xff0000));
-    const hemisphereLightHelper = new HemisphereLightHelper(hemisphereLight, 1000, new Color(0x202020));
+    const axesHelperCube_geometry = new BoxGeometry(50, 50, 50);
+    const axesHelperCube_material = new MeshBasicMaterial({
+      transparent: true,
+      color: 0xffff00,
+      opacity: 0.9,
+    });
+    const axesHelperCube = new Mesh(
+      axesHelperCube_geometry,
+      axesHelperCube_material
+    );
+    const gridHelper = new GridHelper(100000, 160);
+    const directionalLightHelper = new DirectionalLightHelper(directionalLight, 1500);
+    const hemisphereLightHelper = new HemisphereLightHelper(hemisphereLight, 1000);
     const helperGroup = new Group();
-    helperGroup.add(axesHelper, gridHelper, directionalLightHelper, hemisphereLightHelper);
+    helperGroup.add(axesHelper, axesHelperCube, gridHelper, directionalLightHelper, hemisphereLightHelper);
 
     if (this.debug) this._scene.add(helperGroup);
   }

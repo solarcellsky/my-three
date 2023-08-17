@@ -35,6 +35,9 @@ dependencies:
   shapefile:
     specifier: ^0.6.6
     version: 0.6.6
+  suncalc:
+    specifier: ^1.9.0
+    version: 1.9.0
   three:
     specifier: ^0.129.0
     version: 0.129.0
@@ -9850,6 +9853,10 @@ packages:
       postcss: 7.0.39
       postcss-selector-parser: 3.1.2
     dev: true
+
+  /suncalc@1.9.0:
+    resolution: {integrity: sha512-vMJ8Byp1uIPoj+wb9c1AdK4jpkSKVAywgHX0lqY7zt6+EWRRC3Z+0Ucfjy/0yxTVO1hwwchZe4uoFNqrIC24+A==}
+    dev: false
 
   /supercluster@8.0.1:
     resolution: {integrity: sha512-IiOea5kJ9iqzD2t7QJq/cREyLHTtSmUT6gQsweojg9WH2sYJqZK9SswTu6jrscO6D1G5v5vYZ9ru/eq85lXeZQ==}

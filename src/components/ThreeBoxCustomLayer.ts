@@ -55,7 +55,7 @@ export class ThreeBoxCustomLayer implements CustomLayerInterface {
    */
   public addObject2Scene(object: any) {
     object.setRotation({ x: 90, y: 0, z: 0 })
-    console.log('object: ', object);
+    console.log('object: +++++++++++++++++++++++++++++++++++++++++++++++++++', object);
     this._tb.add(object);
   }
 

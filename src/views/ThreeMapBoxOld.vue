@@ -57,7 +57,7 @@ function init() {
   });
   map.addControl(new mapboxgl.NavigationControl(), "top-left");
 
-  map.on("style.load", function() {
+  map.on("style.load", function () {
     map.setFog({
       color: "rgb(186, 210, 235)", // Lower atmosphere
       "high-color": "rgb(36, 92, 223)", // Upper atmosphere
@@ -86,7 +86,6 @@ function addThreeOld(myMap) {
         0
       );
 
-      const { x, y } = _center;
       // 场景
       scene = new THREE.Scene();
       scene.fog = new THREE.Fog("#ffffff", 20, 500);
@@ -132,7 +131,7 @@ function addThreeOld(myMap) {
         texture.wrapS = texture.wrapT = THREE.RepeatWrapping; // 纹理垂直方向的平铺方式
         texture.repeat.set(1, 1); // 重复产生N个相同贴图 产生N行
         // 用代码创建一个朝下的半圆几何体数据，具体的参数可以查看Three.js的官方文档
-        const geometry = new THREE.SphereGeometry(
+        const geometry = new THREE.SphereBufferGeometry(
           1000,
           360,
           100,
@@ -152,18 +151,16 @@ function addThreeOld(myMap) {
         });
         // 创建实体
         const sphere = new THREE.Mesh(geometry, sphere_material);
-        sphere.applyMatrix4(new THREE.Matrix4().makeTranslation(-x, -y, 0));
         scene.add(sphere);
 
         const cube_geometry = new THREE.BoxGeometry(100, 100, 100);
         const cube_material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         const cube = new THREE.Mesh(cube_geometry, cube_material);
-        // cube.applyMatrix4(new THREE.Matrix4().makeTranslation(_x, _y, 0));
         scene.add(cube);
       });
     },
     render: (gl, matrix) => {
-      const lngLat = [myMap.getCenter().lng, myMap.getCenter().lat];
+      const lngLat = [116.396467, 39.907173];
       // 确保模型在地图上正确地理参照的参数
       const modelOrigin = lngLat,
         modelAltitude = 0,
@@ -227,8 +224,7 @@ function addThreeOld(myMap) {
       camera.projectionMatrix.elements = matrix;
       camera.projectionMatrix = m.multiply(l);
       renderer?.render(scene, camera);
-      // sphere_material.map.offset.y += 0.01;
-      // console.log("sphere_material: ", sphere_material.map.offset.y);
+      sphere_material.map.offset.y += 0.01;
       // 必须调用该函数更新视图
       map?.triggerRepaint();
     },
