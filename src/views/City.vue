@@ -6,17 +6,19 @@
 
 <script setup>
 import { onMounted, onBeforeUnmount, ref } from "vue";
-import "../three/style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import * as dat from "dat.gui";
+import Stats from "three/examples/jsm/libs/stats.module.js";
 import CityClass from "../three/city";
 
 onMounted(() => {
-  const gui = new dat.GUI();
+  const stats = new Stats();
+  const container = document.getElementById("app");
 
   // Canvas
   const canvas = document.querySelector("canvas.webgl");
+
+  container.appendChild(stats.dom);
 
   // Scene
   const scene = new THREE.Scene();
@@ -85,7 +87,7 @@ onMounted(() => {
   });
   renderer.setSize(sizes.width, sizes.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(new THREE.Color("#32373E"), 1);
+  renderer.setClearColor(new THREE.Color("#040912"), 1);
 
   // City
   const city = new CityClass({});
@@ -100,6 +102,8 @@ onMounted(() => {
     const dt = clock.getDelta();
 
     city.animate(dt);
+
+    stats.update();
 
     // Update controls
     controls.update();

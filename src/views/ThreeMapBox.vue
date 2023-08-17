@@ -9,14 +9,12 @@ import { onMounted, onBeforeUnmount, ref } from "vue";
 // mapboxgl地图
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import * as dat from "dat.gui";
 
-import { Threebox } from "threebox-plugin";
-// THREE
-import { ThreeBoxCustomLayer } from "../components/ThreeBoxCustomLayer.ts";
 import * as THREE from "three";
+import CityClass from "../three/city";
 
-let map, // 地图
-  threeLayer;
+let map;
 
 // 初始化生命周期
 onMounted(() => {
@@ -56,15 +54,14 @@ function init() {
   });
   map.addControl(new mapboxgl.NavigationControl(), "top-right");
 
-  window.tb = new Threebox(
-    map,
-
-    map.getCanvas().getContext("webgl"),
-    {
-      defaultLights: true,
-      enableSelectingObjects: true,
-    }
-  );
+  map.on("sourcedata", function () {
+    const layers = map.getStyle().layers;
+    layers.map((layer) => {
+      if (layer.id.indexOf("-label") >= 0) {
+        map.removeLayer(layer.id);
+      }
+    });
+  });
 
   map.on("style.load", () => {
     map.setFog({
@@ -86,52 +83,95 @@ function init() {
 
 // 添加threejs
 function addThree(map) {
-  threeLayer = new ThreeBoxCustomLayer(null, true, map, tb);
-  map.addLayer(threeLayer);
+  const canvas = map.getCanvas();
 
+  // Scene
+  const scene = new THREE.Scene();
+
+  /**
+   * Textures
+   */
   const textureLoader = new THREE.TextureLoader();
 
-  textureLoader.load("./assets/images/m.png", (texture) => {
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping; // 纹理垂直方向的平铺方式
-    texture.repeat.set(1, 1); // 重复产生N个相同贴图 产生N行
+  /**
+   * Light
+   */
+  const light = new THREE.AmbientLight(0xadadad); // soft white light
+  scene.add(light);
 
-    // 创建基础材质
-    const sphere_material = new THREE.MeshBasicMaterial({
-      map: texture, // 图片。可以没有那就是纯色
-      transparent: true, // 是否开启透明度
-      side: THREE.DoubleSide, // 正反面渲染
-      minFilter: THREE.LinearFilter,
-    });
-    // 创建实体
-    const sphere = threeLayer.generateThreeBoxGeometryObject("sphere", {
-      radius: 360,
-      sides: 120,
-      opacity: 0.4,
-      units: "meters",
-      material: sphere_material,
-      origin: [116.38023, 39.913302, -Math.PI * 2],
-    });
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight.position.set(100, 100, 0);
+  scene.add(directionalLight);
 
-    threeLayer.addObject2Scene(sphere);
+  /**
+   * Sizes
+   */
+  const sizes = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
 
-    const cube_material = new THREE.MeshBasicMaterial({
-      map: texture,
-      color: 0xff0000,
-      transparent: true, // 是否开启透明度
-      side: THREE.DoubleSide, // 正反面渲染
-      minFilter: THREE.LinearFilter,
-    });
-    const cube = threeLayer.generateThreeBoxGeometryObject("sphere", {
-      radius: 360,
-      sides: 120,
-      opacity: 0.4,
-      units: "meters",
-      material: cube_material,
-      origin: [116.39216, 39.916014, -Math.PI * 2],
-    });
+  window.addEventListener("resize", () => {
+    // Update sizes
+    sizes.width = window.innerWidth;
+    sizes.height = window.innerHeight;
 
-    threeLayer.addObject2Scene(cube);
+    // Update camera
+    camera.aspect = sizes.width / sizes.height;
+    camera.updateProjectionMatrix();
+
+    // Update renderer
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   });
+
+  /**
+   * Camera
+   */
+  // Base camera
+  const camera = new THREE.PerspectiveCamera(
+    45,
+    sizes.width / sizes.height,
+    1,
+    10000
+  );
+  camera.position.set(1200, 700, 121);
+  scene.add(camera);
+
+  /**
+   * Renderer
+   */
+  const renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: true,
+    alpha: true,
+  });
+  renderer.setSize(sizes.width, sizes.height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(new THREE.Color("#32373E"), 1);
+
+  // City
+  const city = new CityClass({});
+  scene.add(city.group);
+
+  /**
+   * Animate
+   */
+  const clock = new THREE.Clock();
+
+  const tick = () => {
+    const dt = clock.getDelta();
+
+    city.animate(dt);
+
+    // Render
+    renderer.render(scene, camera);
+
+    // Call tick again on the next frame
+    window.requestAnimationFrame(tick);
+  };
+
+  tick();
 }
 </script>
 

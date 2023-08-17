@@ -18,7 +18,7 @@ const radarData = [{
         z: 0
     },
     radius: 150,
-    color: '#ff0000',
+    color: '#00ff00',
     opacity: 0.5,
     speed: 2
 }, {
@@ -28,7 +28,7 @@ const radarData = [{
         z: 202
     },
     radius: 320,
-    color: '#efad35',
+    color: '#0000ff',
     opacity: 0.6,
     speed: 1
 }];
@@ -102,7 +102,7 @@ class City {
 
         const floorArray = ['LANDMASS'];
 
-        this.loadFbx('/assets/images/shanghai.fbx').then((scene) => {
+        this.loadFbx('/assets/models/shanghai.fbx').then((scene) => {
             this.group.add(scene);
             // 遍历整个场景找到对应的对象
             scene.traverse((child) => {
@@ -262,11 +262,11 @@ class City {
 
                 // 效果颜色
                 shader.uniforms.uColor = {
-                    value: new THREE.Color("#5588aa")
+                    value: new THREE.Color("#efad35")
                 }
                 // 效果颜色
                 shader.uniforms.uFlowColor = {
-                    value: new THREE.Color("#5588AA")
+                    value: new THREE.Color("#6688aa")
                 }
 
                 // 效果透明度
@@ -279,7 +279,7 @@ class City {
                     value: radius
                 }
                 shader.uniforms.uModRange = { value: 10 } // 范围
-                shader.uniforms.uModWidth = { value: 1.5 } // 范围
+                shader.uniforms.uModWidth = { value: 0 } // 控制建筑物上的条纹范围
 
                 /**
                  * 对片元着色器进行修改
