@@ -61,7 +61,6 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
   }
 
   public onAdd(map: Map, gl: WebGLRenderingContext) {
-    console.log('this._origin: ', this._origin);
     stats = new Stats();
     if (this.debug) map.getContainer().appendChild(stats.dom) && animate();
 
@@ -170,7 +169,7 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
     if (!this._center) throw new Error("Custom Layer has not been added to the map yet.");
     if (lngLat) {
       const coord = this._calculateRelativeCoordinate(this._origin, lngLat) || { x: 0, y: 0, z: 0 };
-      const matrix = new Matrix4().makeTranslation(coord.x, coord.y, 0);
+      const matrix = new Matrix4().makeTranslation(coord.x, coord.y, coord.z);
 
       object.applyMatrix4(matrix);
     }
@@ -192,11 +191,9 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
     if (lngLat) {
       const coord = this._calculateRelativeCoordinate(this._origin, lngLat) || { x: 0, y: 0, z: 0 };
       const matrix = new Matrix4()
-        .makeTranslation(coord.x, coord.y, 0)
+        .makeTranslation(coord.x, coord.y, coord.z)
       object.applyMatrix4(matrix);
     }
-
-    this._updateMeshMaterials(object)
 
     this._scene.add(object);
     this._addBoxHelper(object, this._scene);
@@ -225,7 +222,8 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
 
   private _updateMeshMaterials(obj: any) {
     if (obj.material && obj.material.map) {
-      obj.material.map.offset.y += 0.001;;
+      // obj.material.map.offset.x += 0.01;
+      obj.material.map.offset.y += 0.01;
     } else {
       return null
     }
@@ -253,7 +251,7 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
    * @param lngLat 经纬度
    */
   private _lngLat2ThreeJsCoordinate(lngLat: any = [0, 0]) {
-    let spherical = new Spherical
+    let spherical = new Spherical();
     spherical.radius = earthRad;
     const lng = lngLat[0]
     const lat = lngLat[1]
@@ -263,14 +261,14 @@ export class ThreeJsCustomLayer implements CustomLayerInterface {
     spherical.theta = theta; // theta是俯仰面（竖直面）内的角度，范围0~180度
     let position = new Vector3()
     position.setFromSpherical(spherical)
-    position.z = 0
     return position
   }
 
   private _calculateRelativeCoordinate(origin: any = [0, 0], end: any = [0, 0]) {
-    const _origin = this._lngLat2MercatorCoordinate(origin)
-    const _end = this._lngLat2MercatorCoordinate(end)
-    return { x: _end.x - _origin.x, y: _end.y - _origin.y, z: 0 }
+    const _origin = this._lngLat2ThreeJsCoordinate(origin)
+    const _end = this._lngLat2ThreeJsCoordinate(end)
+    return { x: _origin.x - _end.x, y: 0, z: _origin.z - _end.z }
+
   }
 
   private _setupLights(): void {

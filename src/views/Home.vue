@@ -24,6 +24,7 @@ export default defineComponent({
       { name: "Three MapBox", path: "/threemapbox" },
       { name: "Three MapBox Native", path: "/threemapboxnative" },
       { name: "Three MapBox Old", path: "/threemapboxold" },
+      { name: "ShangHai City", path: "/city" },
       { name: "Water", path: "/water" },
       { name: "Shield", path: "/shield" },
       { name: "Baby", path: "/baby" },

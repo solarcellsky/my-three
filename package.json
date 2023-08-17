@@ -13,6 +13,7 @@
     "babylonjs-loaders": "^4.2.0",
     "cesium": "^1.82.1",
     "core-js": "^3.6.5",
+    "dat.gui": "^0.7.9",
     "echarts": "^5.1.2",
     "echarts-gl": "^2.0.5",
     "geolib": "^3.3.1",
