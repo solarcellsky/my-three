@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="../js/three.min.js"></script>
+    <script src="../js/OrbitControls.js"></script>
+
+    <script src="../js/Init.js"></script>
+    <script src="../js/tween.min.js"></script>
+
+    <script src='../js/LineSegmentsGeometry.js'></script>
+    <script src='../js/LineGeometry.js'></script>
+    <script src='../js/WireframeGeometry2.js'></script>
+    <script src='../js/LineMaterial.js'></script>
+    <script src='../js/LineSegments2.js'></script>
+    <script src='../js/Line2.js'></script>
+    <script src='../js/Wireframe.js'></script>
+
+    <style>
+        #box{
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+    </style>
+
+</head>
+<body>
+<div class="ys-absolute-container" id="box" style="overflow: hidden"></div>
+<script>
+   let el=document.getElementById('box')
+    let app=new THREE.inithree(el,{
+
+    })
+    let scene=app.scene
+    let renderer=app.renderer
+    let camera=app.camera
+    let controls=app.controls
+
+
+
+
+    camera.position.set(50, 50, 50)
+    camera.lookAt(new THREE.Vector3(0, 0, 0))
+
+   renderer.setPixelRatio( window.devicePixelRatio )
+   renderer.shadowMap.enabled = true
+
+
+
+   //add light
+   const directionalLight = new THREE.DirectionalLight( '#fff' )
+   directionalLight.position.set( 30, 30, 30 ).normalize()
+   scene.add( directionalLight )
+   directionalLight.castShadow = true
+
+   const ambientLight = new THREE.AmbientLight('#fff',0.3) // obj 唯一 id
+   scene.add(ambientLight)
+
+   const pointLight = new THREE.PointLight( 'yellow',2 )
+   pointLight.position.set( 0, 30, 0 )
+   pointLight.castShadow = true
+   scene.add( pointLight )
+
+   /*  ***********/
+   let loader=new THREE.TextureLoader()
+   let data=[
+       'px.jpg',//右(-1,0,0)
+       'nx.jpg',//左(1,0,0)
+       'py.jpg',//上(0,1,0)
+       'ny.jpg',//下(0,-1,0)
+       'pz.jpg',//前(0,0,1)
+       'nz.jpg'//后(0,0,-1)
+   ]
+   let txu=[]
+   data.map(v => {
+       loader.load("../images/"+v,texture=>{
+           txu.push(texture)
+
+       })
+   })
+
+
+   /** add home */
+
+
+   /** add plane */
+   const plane = new THREE.Mesh(new THREE.PlaneGeometry(1000,1000),new THREE.MeshStandardMaterial({color:'#fff',sde:THREE.DoubleSide}))
+   plane.rotateX(-Math.PI/2)
+   plane.name = 'plane'
+   plane.position.set(0,0.1,0)
+   scene.add(plane)
+   plane.receiveShadow = true
+
+   function randomColor() {
+       return `rgb(${parseInt(Math.random() * 256)},${parseInt(Math.random() * 256)},${parseInt(Math.random() * 256)})`
+   }
+   function addBox () {
+       return   new THREE.Mesh(new THREE.BoxBufferGeometry(4,10,4),new THREE.MeshStandardMaterial({color:randomColor()}))
+   }
+
+   /** add box1 */
+       //外边框线
+   const  lineMaterial = new THREE.LineBasicMaterial({
+           // 线的颜色
+           color: "#fff",
+           transparent: true,
+           opacity: 0.8,
+           depthFunc: THREE.AlwaysDepth
+       })
+   for(let i =0 ;i<50 ;i++) {
+       const box1 = addBox()
+       box1.position.set(Math.random()*1000-500,5,Math.random()*1000-500)
+       scene.add(box1)
+       box1.castShadow = true
+       const borderLine = new THREE.LineSegments(new THREE.EdgesGeometry(box1.geometry), lineMaterial)
+       box1.name = 'box'
+       borderLine.name  = 'border'
+       borderLine.visible = false
+       box1.add(borderLine)
+   }
+
+
+
+
+
+function flyto(option){
+
+    option.position = option.position || [] //相机新的位置
+    option.controls = option.controls || [] //控制器新的中心点位置(围绕词典旋转等)
+    option.duration = option.duration || 1000 //飞行时间
+    option.easing =  option.easing || TWEEN.Easing.Linear.None
+    TWEEN.removeAll()
+
+    const curPosition = camera.position
+        , controlsTar = controls.target
+        , tween = new TWEEN.Tween({
+        x1: curPosition.x, // 相机当前位置x
+        y1: curPosition.y, // 相机当前位置y
+        z1: curPosition.z, // 相机当前位置z
+        x2: controlsTar.x, // 控制当前的中心点x
+        y2: controlsTar.y, // 控制当前的中心点y
+        z2: controlsTar.z // 控制当前的中心点z
+    }).to({
+        x1: option.position[0], // 新的相机位置x
+        y1: option.position[1], // 新的相机位置y
+        z1: option.position[2], // 新的相机位置z
+        x2: option.controls[0], // 新的控制中心点位置x
+        y2: option.controls[1], // 新的控制中心点位置x
+        z2: option.controls[2] // 新的控制中心点位置x
+    }, option.duration).easing(TWEEN.Easing.Linear.None) // TWEEN.Easing.Cubic.InOut //匀速
+    tween.onUpdate(() => {
+        controls.enabled = false
+        camera.position.set(tween._object.x1, tween._object.y1, tween._object.z1)
+        controls.target.set(tween._object.x2, tween._object.y2, tween._object.z2)
+        controls.update()
+        if (option.update instanceof Function)
+            option.update(tween)
+    })
+    tween.onStart(()=> {
+        controls.enabled = false
+        if (option.start instanceof Function)
+            option.start()
+    })
+    tween.onComplete(() => {
+        controls.enabled = true
+        if (option.done instanceof Function)
+            option.done()
+    })
+    tween.onStop( () => option.stop instanceof Function? option.stop():'')
+    tween.start()
+    TWEEN.add(tween)
+}
+   let position=[[10,0,10],[200,0,200],[300,0,300],[500,0,500]]
+
+
+
+
+
+   function addExportLine() {
+       const position = [
+           500,5,500,
+           300,5,300,
+           200,5,200,
+
+           10,5,10, //对应一个向量 的 x,y,z
+
+
+
+       ]
+       const color = [
+           255,0,0, //对应一个color的 r g b
+           255,0,0,
+           255,0,0
+       ]
+       const geometry = new THREE.LineGeometry()
+       geometry.setPositions( position )
+       geometry.setColors( color )
+
+       const  matLine = new THREE.LineMaterial( {
+           linewidth: 5, // px
+           vertexColors: THREE.VertexColors,
+           dashed: false
+       });
+       matLine.resolution.set( el.offsetWidth, el.offsetHeight ); // 必须的 不然无限大
+       const  line = new THREE.Line2( geometry, matLine );
+       line.computeLineDistances();
+       //line.scale.set( 1, 1, 1 );
+       scene.add( line )
+       return line
+   }
+   addExportLine()
+
+  function digui() {
+       if(position.length>0){
+           let v=position.shift()
+           const x = v[0]
+               ,z = v[2],
+               y = camera.position.y,
+               vv = camera.position.clone().sub(controls.target.clone()) //差
+           let option={
+               position:[x ,y ,z],
+               controls:[x-vv.x ,y-vv.y ,z-vv.z],
+               duration:1500,
+               done:function () {
+                digui()
+
+               }
+
+           }
+           flyto(option)
+
+
+       }
+
+  }
+
+
+ digui()
+
+   //动画、鼠标交互用animate更容易实现
+   function animate() {
+       if(txu.length==6){
+           let mat=[]
+           txu.map(v => {
+             mat.push(  new THREE.MeshStandardMaterial({
+                 // color :'red',
+                 map: v,
+                 side:THREE.DoubleSide
+
+             }))
+           })
+
+           const home = new THREE.Mesh(new THREE.BoxBufferGeometry(1000,100,1000),
+              mat
+           )
+           home.position.set(0,50,0)
+           scene.add(home)
+           txu.push(1)
+       }
+
+       controls.update()
+       TWEEN.update()
+       renderer.render(scene, camera)
+       requestAnimationFrame(animate)
+   }
+
+   animate()
+
+
+</script>
+
+</body>
+</html>
