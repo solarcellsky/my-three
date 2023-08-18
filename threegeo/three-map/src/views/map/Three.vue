@@ -16,7 +16,7 @@
   import {TransformControls} from 'three/examples/jsm/controls/TransformControls'
   import * as geolib from 'geolib';
   import Stats from 'three/examples/jsm/libs/stats.module'
-  import {BufferGeometryUtils} from 'three/examples/jsm/utils/BufferGeometryUtils'
+  import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils'
   import {Water} from 'three/examples/jsm/objects/Water'
 
 
