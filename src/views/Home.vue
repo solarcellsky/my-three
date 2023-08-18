@@ -1,10 +1,10 @@
 <template>
   <div class="home">
-    <div>
+    <div class="grid">
       <template v-for="link in links" :key="link.name">
-        <p>
+        <div class="link">
           <router-link :to="link.path">{{ link.name }}</router-link>
-        </p>
+        </div>
       </template>
     </div>
   </div>
@@ -24,7 +24,7 @@ export default defineComponent({
       { name: "Three MapBox", path: "/threemapbox" },
       { name: "Three MapBox Native", path: "/threemapboxnative" },
       { name: "Three MapBox Old", path: "/threemapboxold" },
-      { name: "ShangHai City", path: "/city" },
+      { name: "* ShangHai City *", path: "/city" },
       { name: "Water", path: "/water" },
       { name: "Shield", path: "/shield" },
       { name: "Baby", path: "/baby" },
@@ -43,5 +43,31 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   height: 100%;
+  .grid {
+    display: grid;
+    grid-column-gap: 10px;
+    grid-row-gap: 10px;
+    grid-template-columns: auto auto;
+  }
+  & .link {
+    width: 220px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    border-radius: 4px;
+    & > a {
+      text-decoration: none;
+      color: #363636;
+      transition: all 0.3s ease-in-out;
+    }
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(0, 0, 0, 0.1);
+      & a {
+        color: #adadad;
+      }
+    }
+  }
 }
 </style>

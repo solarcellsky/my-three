@@ -38,8 +38,8 @@ const wallData = [{
         y: 15,
         z: 100
     },
-    speed: 0.5,
-    color: '#efad35',
+    speed: 0.1,
+    color: '#00ffff',
     opacity: 0.6,
     radius: 420,
     height: 120,
@@ -58,7 +58,7 @@ const flyData = [{
     },
     range: 120,
     height: 100,
-    color: '#efad35',
+    color: '#ff00ff',
     speed: 1,
     size: 30
 }, {
@@ -74,9 +74,9 @@ const flyData = [{
     },
     height: 300,
     range: 150,
-    color: '#ff0000',
+    color: '#ff00ff',
     speed: 1,
-    size: 40
+    size: 10
 }]
 
 class City {
@@ -262,7 +262,7 @@ class City {
 
                 // 效果颜色
                 shader.uniforms.uColor = {
-                    value: new THREE.Color("#efad35")
+                    value: new THREE.Color("#ff00ff")
                 }
                 // 效果颜色
                 shader.uniforms.uFlowColor = {

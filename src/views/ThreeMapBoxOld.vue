@@ -57,6 +57,15 @@ function init() {
   });
   map.addControl(new mapboxgl.NavigationControl(), "top-left");
 
+  map.on("sourcedata", function () {
+    const layers = map.getStyle().layers;
+    layers.map((layer) => {
+      if (layer.id.indexOf("-label") >= 0) {
+        map.removeLayer(layer.id);
+      }
+    });
+  });
+
   map.on("style.load", function () {
     map.setFog({
       color: "rgb(186, 210, 235)", // Lower atmosphere
