@@ -6,3 +6,4 @@ declare module '*.vue' {
 }
 
 declare module 'threebox-plugin';
+declare module 'dat.gui';

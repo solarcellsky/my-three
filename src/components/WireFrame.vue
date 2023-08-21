@@ -6,6 +6,7 @@
 
 <script>
 import * as THREE from "three";
+import * as dat from "dat.gui";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
@@ -26,6 +27,7 @@ export default {
     };
   },
   mounted() {
+    this.initDatUI();
     this.initLoadingManager();
     this.initScene();
     this.initCameras();
@@ -35,6 +37,10 @@ export default {
     this.animate();
   },
   methods: {
+    initDatUI() {
+      const gui = new dat.GUI();
+      window.gui = gui;
+    },
     initScene() {
       const camera = new THREE.PerspectiveCamera(
         45,
@@ -61,6 +67,11 @@ export default {
       window.renderer = renderer;
       window.labelRenderer = labelRenderer;
       // window.interactionManager = interactionManager;
+
+      const folder = window.gui.addFolder("设置摄像机视角");
+      folder.add(window.camera, "fov", 1, 180).onChange(this.updateCamera);
+      folder.add(window.camera, "near", 1, 200).onChange(this.updateCamera);
+      folder.add(window.camera, "far", 1, 200).onChange(this.updateCamera);
 
       this.loadModels(this.models);
       window.addEventListener("resize", this.onWindowResize, false);
@@ -156,17 +167,20 @@ export default {
       window.loadingManager = loadingManager;
       const progressBar = document.getElementById("progress-bar");
       if (progressBar) {
-        loadingManager.onProgress = function(item, loaded, total) {
+        loadingManager.onProgress = function (item, loaded, total) {
           progressBar.style.width = (loaded / total) * 100 + "%";
         };
 
-        loadingManager.onLoad = function() {
+        loadingManager.onLoad = function () {
           progressBar.style.width = "100%";
           setTimeout(() => {
             progressBar.style.display = "none";
           }, 500);
         };
       }
+    },
+    updateCamera() {
+      window.camera.updateProjectionMatrix();
     },
     loadModels(models) {
       let self = this;
@@ -198,7 +212,7 @@ export default {
       loader.manager = window.loadingManager;
       loader.load(
         model.name,
-        function(gltf) {
+        function (gltf) {
           let scene = gltf.scene;
           scene.traverse((node) => {
             if (!node.isMesh) return;
@@ -236,45 +250,48 @@ export default {
       //create a blue LineBasicMaterial
       const lineMaterial = new THREE.LineBasicMaterial({ color: 0x00ffff });
 
-      fontLoader.load("./assets/fonts/helvetiker_bold.typeface.json", function(
-        font
-      ) {
-        const materials = [
-          new THREE.MeshBasicMaterial({ color: 0xffffff }), // front
-          new THREE.MeshBasicMaterial({ color: 0xffffff }), // side
-        ];
-        floors.map((floor, index) => {
-          if (index > 26) return;
-          y += 0.45;
-          f += 1;
-          const textGeometry = new THREE.TextGeometry("F" + f, {
-            font: font,
-            size: 1,
-            height: 0.1,
+      fontLoader.load(
+        "./assets/fonts/helvetiker_bold.typeface.json",
+        function (font) {
+          const materials = [
+            new THREE.MeshBasicMaterial({ color: 0xffffff }), // front
+            new THREE.MeshBasicMaterial({ color: 0xffffff }), // side
+          ];
+          floors.map((floor, index) => {
+            if (index > 26) return;
+            y += 0.45;
+            f += 1;
+            const textGeometry = new THREE.TextGeometry("F" + f, {
+              font: font,
+              size: 1,
+              height: 0.1,
+            });
+            textGeometry.computeBoundingBox();
+
+            let textMesh = new THREE.Mesh(textGeometry, materials);
+
+            textMesh.position.x = 4.2;
+            textMesh.position.y = y;
+            textMesh.position.z = 0;
+            textMesh.scale.set(0.1, 0.1, 0.1);
+
+            const points = [];
+            points.push(new THREE.Vector3(4.5, y - 0.1, 0));
+            points.push(new THREE.Vector3(3.5, y - 0.1, 0));
+            points.push(new THREE.Vector3(2.5, y - 0.5, 0));
+
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints(
+              points
+            );
+            const line = new THREE.Line(lineGeometry, lineMaterial);
+            const group = new THREE.Group();
+            group.add(line, textMesh);
+            worldScene.add(group);
+            self.bindEvents(group, floor);
+            // console.log(y + '---------', floor, '-----' + index)
           });
-          textGeometry.computeBoundingBox();
-
-          let textMesh = new THREE.Mesh(textGeometry, materials);
-
-          textMesh.position.x = 4.2;
-          textMesh.position.y = y;
-          textMesh.position.z = 0;
-          textMesh.scale.set(0.1, 0.1, 0.1);
-
-          const points = [];
-          points.push(new THREE.Vector3(4.5, y - 0.1, 0));
-          points.push(new THREE.Vector3(3.5, y - 0.1, 0));
-          points.push(new THREE.Vector3(2.5, y - 0.5, 0));
-
-          const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-          const line = new THREE.Line(lineGeometry, lineMaterial);
-          const group = new THREE.Group();
-          group.add(line, textMesh);
-          worldScene.add(group);
-          self.bindEvents(group, floor);
-          // console.log(y + '---------', floor, '-----' + index)
-        });
-      });
+        }
+      );
     },
     bindEvents(scene, floor) {
       let objectsHover = [];
@@ -406,7 +423,7 @@ export default {
       requestAnimationFrame(this.animate);
       window.renderer.render(window.worldScene, window.camera);
       window.labelRenderer.render(window.worldScene, window.camera);
-      window.interactionManager.update();
+      // window.interactionManager.update();
       window.stats.update();
     },
     onProgress(xhr) {

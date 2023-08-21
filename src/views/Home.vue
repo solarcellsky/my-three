@@ -28,6 +28,7 @@ export default defineComponent({
       { name: "Water", path: "/water" },
       { name: "Shield", path: "/shield" },
       { name: "Baby", path: "/baby" },
+      { name: "Dat UI", path: "/dat_ui" },
     ];
 
     return {
@@ -58,7 +59,7 @@ export default defineComponent({
     border-radius: 4px;
     & > a {
       text-decoration: none;
-      color: #363636;
+      color: #696969;
       transition: all 0.3s ease-in-out;
     }
     &:hover {
