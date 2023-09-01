@@ -1,0 +1,342 @@
+@import url("https://fonts.googleapis.com/css?family=Ubuntu");
+body {
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  font-family: "Ubuntu", sans-serif;
+  background-color: #f0f0f0;
+  color: #111;
+}
+a {
+  color: #f06;
+}
+a:visited {
+  color: #d05;
+}
+a:hover {
+  color: #f28;
+}
+.content {
+  display: flex;
+  margin: 0 auto;
+  padding: 30px 10px 0;
+  gap: 30px;
+  justify-content: space-between;
+}
+.content .blogEntries article {
+  margin-bottom: 50px;
+}
+.content p {
+  line-height: 1.3;
+}
+.pixels {
+  margin: 10px 0;
+}
+.pixels img {
+  image-rendering: -moz-crisp-edges;
+  /* Firefox */
+  image-rendering: crisp-edges;
+  image-rendering: optimizespeed;
+  image-rendering: pixelated;
+  /* Chrome */
+  max-width: 200%;
+  height: auto;
+}
+header.topper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #222;
+  color: #f0f0f0;
+  height: 30px;
+  /* TODO: make this calculated in less rather than explicit */
+}
+header.topper h1,
+header.topper nav,
+header.topper nav ul,
+header.topper nav li {
+  display: inline-block;
+  height: 20px;
+}
+header.topper a,
+header.topper a:visited {
+  color: #f0f0f0;
+  text-decoration: none;
+}
+header.topper a:hover {
+  color: #f06;
+}
+header.topper h1 {
+  font-size: 1em;
+  padding: 5px 15px;
+  margin: 0;
+  border-right: 1px solid #f06;
+}
+header.topper nav ul {
+  margin: 0;
+  padding: 0;
+}
+header.topper nav li {
+  padding: 0 5px 5px 5px;
+  margin-left: 5px;
+}
+header.topper nav li.active {
+  border-bottom: 4px solid #f06;
+}
+header.topper nav.external {
+  float: right;
+  margin: 5px;
+}
+header.topper #hamburger {
+  display: none;
+  cursor: pointer;
+  color: #f06;
+  font-weight: normal;
+}
+pre {
+  border: 1px solid #ccc;
+  background-color: #fff;
+  overflow-x: auto;
+}
+form {
+  padding: 10px 0;
+}
+form div.question {
+  margin: 10px 0;
+}
+form div.question label {
+  display: inline-block;
+  min-width: 100px;
+}
+form .loginButton {
+  margin-left: 103px;
+  padding: 0 10px 3px;
+}
+form #content {
+  width: 100%;
+  min-height: 250px;
+}
+article.individual-post {
+  margin-top: 20px;
+}
+article.post .post-meta time {
+  color: #bbb;
+}
+article.post header .post-header {
+  margin-top: 0;
+}
+article.post header .post-header a {
+  text-decoration: none;
+}
+article.post footer {
+  font-size: 0.9em;
+  color: #bbb;
+}
+.gamesSection {
+  overflow: hidden;
+}
+.gamesSection h2 {
+  color: #d05;
+}
+.gamesSection .game {
+  float: left;
+  margin-right: 20px;
+  margin-bottom: 20px;
+  width: 315px;
+}
+.gamesSection .game .title {
+  font-weight: bold;
+}
+.gamesSection .game p {
+  margin: 0.5em 0;
+  color: #666;
+}
+/* low-res */
+@media only screen and (max-width: 600px) {
+  header.topper {
+    position: relative;
+    display: block;
+    height: auto;
+  }
+  header.topper .toggledOn {
+    display: block;
+  }
+  header.topper .toggledOff {
+    display: none;
+  }
+  header.topper h1,
+  header.topper nav,
+  header.topper nav ul,
+  header.topper nav li {
+    display: block;
+    height: auto;
+  }
+  header.topper h1 {
+    border-right: none;
+    padding-left: 10px;
+  }
+  header.topper nav {
+    color: #f0f0f0;
+    background-color: #222;
+    border-top: 1px solid #f0f0f0;
+  }
+  header.topper nav ul {
+    display: block;
+  }
+  header.topper nav li {
+    border-bottom: 1px solid #666;
+    margin-left: 0;
+    padding-left: 10px;
+    padding-top: 5px;
+  }
+  header.topper nav li a {
+    display: block;
+  }
+  header.topper nav li.active {
+    border-bottom: 1px solid #666;
+  }
+  header.topper nav li.active a {
+    color: #f06;
+  }
+  header.topper nav.external {
+    display: none;
+    float: none;
+    margin: 0;
+  }
+  header.topper #hamburger {
+    display: inline-block;
+    float: right;
+  }
+  #content {
+    padding-top: 10px;
+  }
+}
+
+/*
+
+github.com style (c) Vasily Polovnyov <vast@whiteants.net>
+
+*/
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  color: #333;
+  background: #f8f8f8;
+  -webkit-text-size-adjust: none;
+}
+
+.hljs-comment,
+.hljs-template_comment,
+.diff .hljs-header,
+.hljs-javadoc {
+  color: #998;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.css .rule .hljs-keyword,
+.hljs-winutils,
+.javascript .hljs-title,
+.nginx .hljs-title,
+.hljs-subst,
+.hljs-request,
+.hljs-status {
+  color: #333;
+  font-weight: bold;
+}
+
+.hljs-number,
+.hljs-hexcolor,
+.ruby .hljs-constant {
+  color: #008080;
+}
+
+.hljs-string,
+.hljs-tag .hljs-value,
+.hljs-phpdoc,
+.hljs-dartdoc,
+.tex .hljs-formula {
+  color: #d14;
+}
+
+.hljs-title,
+.hljs-id,
+.scss .hljs-preprocessor {
+  color: #900;
+  font-weight: bold;
+}
+
+.javascript .hljs-title,
+.hljs-list .hljs-keyword,
+.hljs-subst {
+  font-weight: normal;
+}
+
+.hljs-class .hljs-title,
+.hljs-type,
+.vhdl .hljs-literal,
+.tex .hljs-command {
+  color: #458;
+  font-weight: bold;
+}
+
+.hljs-tag,
+.hljs-tag .hljs-title,
+.hljs-rules .hljs-property,
+.django .hljs-tag .hljs-keyword {
+  color: #000080;
+  font-weight: normal;
+}
+
+.hljs-attribute,
+.hljs-variable,
+.lisp .hljs-body {
+  color: #008080;
+}
+
+.hljs-regexp {
+  color: #009926;
+}
+
+.hljs-symbol,
+.ruby .hljs-symbol .hljs-string,
+.lisp .hljs-keyword,
+.clojure .hljs-keyword,
+.scheme .hljs-keyword,
+.tex .hljs-special,
+.hljs-prompt {
+  color: #990073;
+}
+
+.hljs-built_in {
+  color: #0086b3;
+}
+
+.hljs-preprocessor,
+.hljs-pragma,
+.hljs-pi,
+.hljs-doctype,
+.hljs-shebang,
+.hljs-cdata {
+  color: #999;
+  font-weight: bold;
+}
+
+.hljs-deletion {
+  background: #fdd;
+}
+
+.hljs-addition {
+  background: #dfd;
+}
+
+.diff .hljs-change {
+  background: #0086b3;
+}
+
+.hljs-chunk {
+  color: #aaa;
+}
